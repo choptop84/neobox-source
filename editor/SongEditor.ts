@@ -221,7 +221,6 @@ const {button, div, span, select, option, input, a} = HTML;
 		// private readonly _chipHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _instrumentTypeHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _keySelect: HTMLSelectElement = buildOptions(select({}), Config.keyNames);
-		private readonly _themeSelect: HTMLSelectElement = buildOptions(select({}), Config.themeNames);
 		private readonly _tempoSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.tempoSteps - 1, value: "7", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeTempo(this._doc, oldValue, newValue));
 		private readonly _reverbSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.reverbRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeReverb(this._doc, oldValue, newValue));
 		private readonly _blendSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.blendRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeBlend(this._doc, oldValue, newValue));
@@ -448,7 +447,6 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._fileMenu.addEventListener("change", this._fileMenuHandler);
 			this._editMenu.addEventListener("change", this._editMenuHandler);
 			this._optionsMenu.addEventListener("change", this._optionsMenuHandler);
-			this._themeSelect.addEventListener("change", this._whenSetTheme);
 			this._scaleSelect.addEventListener("change", this._whenSetScale);
 			this._mixSelect.addEventListener("change", this._whenSetMix);
 			this._sampleRateSelect.addEventListener("change", this._whenSetSampleRate);
@@ -1170,10 +1168,6 @@ const {button, div, span, select, option, input, a} = HTML;
 			setTimeout(() => { // Prompts seem to get stuck if reloading is done too quickly.
 				location.reload();
 			}, 500);
-		}
-		
-		private _whenSetTheme = (): void => {
-			this._openPrompt("refresh");
 		}
 		
 		private _whenSetScale = (): void => {

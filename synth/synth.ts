@@ -935,7 +935,7 @@ declare global {
 				} else if (command == SongTagCode.setSongTheme) {
 					if (fromOld) {
 						var themeIndex = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
-						var themes = ["none", "modbox2", "artic", "Cinnamon Roll", "Ocean", "rainbow", "float", "windows", "grassland", "dessert", "kahootiest", "beambit", "egg", "Poniryoshka", "gameboy", "woodkid", "midnight", "snedbox", "unnamed", "piano", "halloween", "frozen"]
+						var themes = ["none", "modbox2", "artic", "Cinnamon Roll", "Ocean", "rainbow", "float", "windows", "grassland", "dessert", "kahootiest", "beambit", "egg", "Poniryoshka", "gameboy", "woodkid", "midnight", "snedbox", "unnamed", "piano", "halloween", "frozen"];
 						this.setSongTheme = themes[themeIndex];
 					} else {
 						var songThemeLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
@@ -1528,6 +1528,7 @@ declare global {
 		public fromJsonObject(jsonObject: any): void {
 			this.initToDefault(true);
 			if (!jsonObject) return;
+			const format: any = jsonObject.format;
 			const version: any = jsonObject.version;
 			if (version > Song._format) return;
 			
@@ -1539,7 +1540,20 @@ declare global {
 			}
 
 			if (jsonObject.theme != undefined) {
+				if (format == "BeepBox") {
+					if ((jsonObject["theme"] != "Nepbox") && (jsonObject["theme"] != "Laffey") && (jsonObject["theme"] != "ModBox")) {
+						var themes = ["none", "modbox2", "artic", "Cinnamon Roll", "Ocean", "rainbow", "float", "windows", "grassland", "dessert", "kahootiest", "beambit", "egg", "Poniryoshka", "gameboy", "woodkid", "midnight", "snedbox", "unnamed", "piano", "halloween", "frozen"];
+						var themeIndex = Config.oldThemeNames.indexOf(jsonObject["theme"]);
+						this.setSongTheme = themes[themeIndex];
+					} else {
+						var themes = ["none", "nepbox", "laffey"];
+						var oldThemes = ["ModBox", "Nepbox", "Laffey"];
+						var themeIndex = oldThemes.indexOf(jsonObject["theme"]);
+						this.setSongTheme = themes[themeIndex];
+					}
+				} else {
 				this.setSongTheme = jsonObject["theme"];
+				}
 			}
 
 			if (jsonObject.mix != undefined) {
