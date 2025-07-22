@@ -43,7 +43,6 @@ import { SongDataPrompt } from "./SongDataPrompt";
 import { RefreshKeyPrompt } from "./RefreshKeyPrompt";
 import { SongDurationPrompt } from "./SongDurationPrompt";
 import { InstrumentTypePrompt } from "./InstrumentTypePrompt";
-import { ManualPrompt } from "./ManualPrompt";
 import { ThemePrompt } from "./ThemePrompt";
 import { LayoutPrompt } from "./LayoutPrompt";
 import { ColorConfig } from "./ColorConfig"; 
@@ -347,7 +346,7 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._editorBox,
 			this._trackEditorBox,
 			div({class: "settings-area"}, 
-				div({ class:"title", style: "align-items: center; display: flex; justify-content: center;" }, div({},"NepBox")),
+				div({ class:"title", style: "align-items: center; display: flex; justify-content: center;" }, div({},"Neo NepBox")),
 				div({ class:"controller", style: "margin: 5px 0; gap: 3px; display: flex; flex-direction: column; align-items: center;" }, 
 					div({ style: "display:flex; flex-direction:row;" },
 						SVG.svg( { width: "2em", height: "2em", viewBox: "0 0 26 26" }, 
@@ -549,9 +548,6 @@ const {button, div, span, select, option, input, a} = HTML;
 					case "archive":
 						this.prompt = new ArchivePrompt(this._doc);
 						break;
-					case "manual":
-						this.prompt = new ManualPrompt(this._doc);
-						break;	
 					case "themes":
 						this.prompt = new ThemePrompt(this._doc);
 						break;	
@@ -952,6 +948,13 @@ const {button, div, span, select, option, input, a} = HTML;
 				}
 					break;
 
+				case 79: // o
+				if (event.ctrlKey || event.metaKey) {
+					this._openPrompt("import");
+					event.preventDefault();
+				}
+					break;
+
 				case 32: // space
 					//stage.focus = stage;
 					this._togglePlay();
@@ -1258,7 +1261,7 @@ const {button, div, span, select, option, input, a} = HTML;
 					this._openPrompt("songdata");
 					break;
 				case "manual":
-					this._openPrompt("manual");
+					window.open("./manual.html");
 					break;
 			}
 			this._fileMenu.selectedIndex = 0;
