@@ -34,7 +34,7 @@ import { Prompt } from "./Prompt";
 				div({ style: "text-align: left;" }, [div('Your song is ' + this._doc.synth.totalSeconds + ' seconds long.')]),
 				div({ style: "text-align: left;" }, [div('Your song runs at ' + this._doc.song.getBeatsPerMinute() + ' beats per minute.')]),
 				div({ style: "text-align: left;" }, [div('There are currently ' + this._doc.song.getChannelUnusedCount() + ' unused channels in your song out of 16.')]),
-				div({ style: "text-align: left;" }, [div('Your are using the ' + this._doc.song.getThemeName() + ' theme.')]),
+				div({ style: "text-align: left;" }, [div(this._doc.song.setSongTheme != "none" ? 'You are using your personal theme.' :'Your are using the ' + this._doc.song.setSongTheme + ' theme.')]),
 				div({ style: "text-align: left;" }, [div('Your time signuature is ' + this._doc.song.getTimeSig())]),
 				div({ style: "text-align: left;" }, [div('Your scale is ' + this._doc.song.getScaleNKey() + '.')]),
 			this._cancelButton,

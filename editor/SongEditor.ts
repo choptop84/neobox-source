@@ -38,12 +38,12 @@ import { ChorusPrompt } from "./ChorusPrompt";
 import { ExportPrompt } from "./ExportPrompt";
 import { ImportPrompt } from "./ImportPrompt";
 import { ArchivePrompt } from "./ArchivePrompt";
-import { RefreshPrompt } from "./RefreshPrompt";
 import { SongDataPrompt } from "./SongDataPrompt";
 import { RefreshKeyPrompt } from "./RefreshKeyPrompt";
 import { SongDurationPrompt } from "./SongDurationPrompt";
 import { InstrumentTypePrompt } from "./InstrumentTypePrompt";
 import { ThemePrompt } from "./ThemePrompt";
+import { SongThemePrompt } from "./SongThemePrompt";
 import { LayoutPrompt } from "./LayoutPrompt";
 import { ColorConfig } from "./ColorConfig"; 
 
@@ -51,6 +51,8 @@ const {button, div, span, select, option, input, a} = HTML;
 	
 	export const isMobile: boolean = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|android|ipad|playbook|silk/i.test(navigator.userAgent);
 	
+	let songThemeSet = "none";
+
 	function buildOptions(menu: HTMLSelectElement, items: ReadonlyArray<string | number>): HTMLSelectElement {
 		for (let index: number = 0; index < items.length; index++) {
 			menu.appendChild(option({value: index}, items[index]));
@@ -159,6 +161,7 @@ const {button, div, span, select, option, input, a} = HTML;
 			option({value: "transposeUp"}, "Shift Notes Up (+)"),
 			option({value: "transposeDown"}, "Shift Notes Down (-)"),
 			option({value: "duration"}, "Custom Song Size (Q)"),
+			option({value: "songTheme"}, "Set Song Theme..."),
 		);
 		private readonly _optionsMenu: HTMLSelectElement = select({style: "width: 100%;"}, 
 			option({selected: true, disabled: true, hidden: false}, "Preferences Menu"),
@@ -539,9 +542,6 @@ const {button, div, span, select, option, input, a} = HTML;
 					case "songdata":
 						this.prompt = new SongDataPrompt(this._doc);
 						break;
-					case "refresh":
-						this.prompt = new RefreshPrompt(this._doc, this, this._themeSelect.selectedIndex);
-						break;
 					case "refresh key":
 						this.prompt = new RefreshKeyPrompt(this._doc, this, this._keySelect.selectedIndex);
 						break;
@@ -550,6 +550,9 @@ const {button, div, span, select, option, input, a} = HTML;
 						break;
 					case "themes":
 						this.prompt = new ThemePrompt(this._doc);
+						break;	
+					case "songTheme":
+						this.prompt = new SongThemePrompt(this._doc);
 						break;	
 					case "layouts":
 						this.prompt = new LayoutPrompt(this._doc);
@@ -577,6 +580,20 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._barScrollBar.render();
 			this._trackEditor.render();
 			this._patternEditor.render();
+
+			if (this._doc.song.setSongTheme != songThemeSet) {
+				if (this._doc.song.setSongTheme == "none") {
+					if (window.localStorage.getItem("modboxTheme") != null) {
+						ColorConfig.setTheme(String(window.localStorage.getItem("modboxTheme")));
+					} else {
+						window.localStorage.setItem("modboxTheme", "default");
+						ColorConfig.setTheme("default");
+					}
+				} else {
+					ColorConfig.setTheme(this._doc.song.setSongTheme);
+				}
+				songThemeSet = this._doc.song.setSongTheme;
+			} 
 
 			document.documentElement.style.setProperty("--full-layout-columns", this._doc.advancedSettings ? "minmax(0, 1fr) 190px 200px": "minmax(0, 1fr) 190px");
 			document.documentElement.style.setProperty("--middle-layout-columns", this._doc.advancedSettings ? "190px minmax(0, 1fr) 200px" : "190px minmax(0, 1fr)");
@@ -606,7 +623,6 @@ const {button, div, span, select, option, input, a} = HTML;
 			let activeElement: Element = document.activeElement ? document.activeElement : document.activeElement!;
 
 			
-			setSelectedIndex(this._themeSelect, this._doc.song.theme);
 			setSelectedIndex(this._scaleSelect, this._doc.song.scale);
 			setSelectedIndex(this._mixSelect, this._doc.song.mix);
 			setSelectedIndex(this._sampleRateSelect, this._doc.song.sampleRate);
@@ -1173,11 +1189,7 @@ const {button, div, span, select, option, input, a} = HTML;
 		}
 		
 		private _whenSetKey = (): void => {
-			if (this._doc.song.theme == 19) {
-				this._openPrompt("refresh key");
-			} else {
-				this._doc.record(new ChangeKey(this._doc, this._keySelect.selectedIndex));
-			}
+			this._doc.record(new ChangeKey(this._doc, this._keySelect.selectedIndex));
 		}
 		
 		private _whenSetPartsPerBeat = (): void => {
@@ -1296,6 +1308,9 @@ const {button, div, span, select, option, input, a} = HTML;
 				case "archive":
 					this._openPrompt("archive");
 					break;
+				case "songTheme":
+					this._openPrompt("songTheme");
+					break;	
 			}
 			this._editMenu.selectedIndex = 0;
 		}

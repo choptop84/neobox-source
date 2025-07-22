@@ -596,17 +596,19 @@ import { InstrumentType, Config } from "../synth/SynthConfig";
 		}
 	}
 	
-	export class ChangeTheme extends Change {
-		constructor(doc: SongDocument, newValue: number) {
+	export class ChangeSongTheme extends Change {
+		constructor(doc: SongDocument, oldValue: string, newValue: string) {
 			super();
-			if (doc.song.theme != newValue) {
-				doc.song.theme = newValue;
-				doc.notifier.changed();
-				this._didSomething();
+			if (newValue.length > 30) {
+				newValue = newValue.substring(0, 30);
 			}
+
+			doc.song.setSongTheme = newValue;
+			doc.notifier.changed();
+			if (oldValue != newValue) this._didSomething();
 		}
 	}
-	
+
 	export class ChangeLoop extends Change {
 		constructor(private _doc: SongDocument, public oldStart: number, public oldLength: number, public newStart: number, public newLength: number) {
 			super();

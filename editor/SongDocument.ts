@@ -37,8 +37,6 @@ import {Selection} from "./Selection.js";
 	}
 	
 	export class SongDocument {
-		public static _latestVersion: number = 2;
-		
 		public song: Song;
 		public synth: Synth;
 		public notifier: ChangeNotifier = new ChangeNotifier();
@@ -85,11 +83,15 @@ import {Selection} from "./Selection.js";
 
 			this.synth.volume = this._calcVolume();
 			
-			if (window.localStorage.getItem("modboxTheme") != null) {
-				ColorConfig.setTheme(String(window.localStorage.getItem("modboxTheme")));
+			if (this.song.setSongTheme == "none") {
+				if (window.localStorage.getItem("modboxTheme") != null) {
+					ColorConfig.setTheme(String(window.localStorage.getItem("modboxTheme")));
+				} else {
+					window.localStorage.setItem("modboxTheme", "default");
+					ColorConfig.setTheme("default");
+				}
 			} else {
-				window.localStorage.setItem("modboxTheme", "default");
-				ColorConfig.setTheme("default");
+				ColorConfig.setTheme(this.song.setSongTheme);
 			}
 
 			if (window.localStorage.getItem("layout") != null) {

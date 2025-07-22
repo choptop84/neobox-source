@@ -136,7 +136,7 @@ declare global {
 		wave = CharCode.w,
 		blend = CharCode.x, // [MB]
 		riff = CharCode.y, // [MB]
-		theme = CharCode.z, // [MB]
+		setSongTheme = CharCode.z, // [MB]
 		feedbackAmplitude = CharCode.UNDERSCORE, // [MB] changed
 		algorithm = CharCode.A,
 		octoff = CharCode.B, // [MB]
@@ -491,7 +491,7 @@ declare global {
 		private static readonly _base64IntToCharCode: ReadonlyArray<number> = [48,49,50,51,52,53,54,55,56,57,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,45,95];
 		
 		public scale: number;
-		public theme: number;
+		public setSongTheme: string;
 		public key: number;
 		public mix: number;
 		public sampleRate: number;
@@ -528,10 +528,6 @@ declare global {
 			return (Config.pitchChannelCountMax + Config.drumChannelCountMax) - (this.pitchChannelCount + this.drumChannelCount);
 		}
 
-		public getThemeName(): string {
-			return Config.themeNames[this.theme];
-		}
-
 		public getTimeSig(): string {
 			return this.beatsPerBar + "/" + this.partsPerBeat + " with " + this.barCount + " bars.";
 		}
@@ -559,7 +555,7 @@ declare global {
 		
 		public initToDefault(andResetChannels: boolean = true): void {
 			this.scale = 0;
-			this.theme = 0;
+			this.setSongTheme = "none";
 			this.key = Config.keyNames.length - 1;
 			this.mix = 1;
 			this.sampleRate = 2;
@@ -626,7 +622,15 @@ declare global {
 
 
 			buffer.push(SongTagCode.channelCount, base64IntToCharCode[this.pitchChannelCount], base64IntToCharCode[this.drumChannelCount]);
-			buffer.push(SongTagCode.theme, base64IntToCharCode[this.theme]);
+
+			buffer.push(SongTagCode.setSongTheme);
+			var encodedSongTheme: string = encodeURIComponent(this.setSongTheme);
+        	buffer.push(base64IntToCharCode[encodedSongTheme.length >> 6], base64IntToCharCode[encodedSongTheme.length & 0x3f]);
+			// Actual encoded string follows
+			for (let i: number = 0; i < encodedSongTheme.length; i++) {
+				buffer.push(encodedSongTheme.charCodeAt(i));
+			}
+
 			buffer.push(SongTagCode.scale, base64IntToCharCode[this.scale]);
 			buffer.push(SongTagCode.mix, base64IntToCharCode[this.mix]);
 			buffer.push(SongTagCode.sampleRate, base64IntToCharCode[this.sampleRate]);
@@ -928,8 +932,16 @@ declare global {
 					this.mix = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
 				} else if (command == SongTagCode.key) {
 					this.key = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
-				} else if (command == SongTagCode.theme) {
-						this.theme = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+				} else if (command == SongTagCode.setSongTheme) {
+					if (fromOld) {
+						var themeIndex = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+						var themes = ["none", "modbox2", "artic", "Cinnamon Roll", "Ocean", "rainbow", "float", "windows", "grassland", "dessert", "kahootiest", "beambit", "egg", "Poniryoshka", "gameboy", "woodkid", "midnight", "snedbox", "unnamed", "piano", "halloween", "frozen"]
+						this.setSongTheme = themes[themeIndex];
+					} else {
+						var songThemeLength = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) + base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+						this.setSongTheme = decodeURIComponent(compressed.substring(charIndex, charIndex + songThemeLength));
+						charIndex += songThemeLength;
+					}
 				} else if (command == SongTagCode.loopStart) {
 					if (fromOld && beforeFive) {
 						this.loopStart = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
@@ -1491,7 +1503,7 @@ declare global {
 			return {
 				format: Song._format,
 				version: Song._latestNepBoxVersion,
-				theme: Config.themeNames[this.theme],
+				theme: this.setSongTheme,
 				scale: Config.scaleNames[this.scale],
 				mix: Config.mixNames[this.mix],
 				sampleRate: Config.sampleRateNames[this.sampleRate],
@@ -1524,6 +1536,10 @@ declare global {
 				const oldScaleNames: Dictionary<number> = {"romani :)": 8, "romani :(": 9};
 				const scale: number = oldScaleNames[jsonObject.scale] != undefined ? oldScaleNames[jsonObject.scale] : Config.scaleNames.indexOf(jsonObject.scale);
 				if (scale != -1) this.scale = scale;
+			}
+
+			if (jsonObject.theme != undefined) {
+				this.setSongTheme = jsonObject["theme"];
 			}
 
 			if (jsonObject.mix != undefined) {
