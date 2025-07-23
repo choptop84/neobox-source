@@ -333,7 +333,7 @@ import { ColorConfig } from "./ColorConfig";
 		private _snapToPitch(guess: number, min: number, max: number): number {
 			if (guess < min) guess = min;
 			if (guess > max) guess = max;
-			const scale: ReadonlyArray<boolean> = Config.scaleFlags[this._doc.song.scale];
+			const scale: ReadonlyArray<boolean> = Config.scales[this._doc.song.scale].flags;
 			if (scale[Math.floor(guess) % 12] || this._doc.song.getChannelIsDrum(this._doc.channel)) {
 				return Math.floor(guess);
 			} else {
@@ -409,7 +409,7 @@ import { ColorConfig } from "./ColorConfig";
 				this._svgPlayhead.setAttribute("visibility", "hidden"); 
 			}
 			
-			if (this._doc.synth.playing && this._doc.autoFollow && this._followPlayheadBar != playheadBar) {
+			if (this._doc.synth.playing && this._doc.prefs.autoFollow && this._followPlayheadBar != playheadBar) {
 				new ChangeChannelBar(this._doc, this._doc.channel, playheadBar);
 				this._doc.notifier.notifyWatchers();
 			}
@@ -782,7 +782,7 @@ import { ColorConfig } from "./ColorConfig";
 		}
 		
 		private _documentChanged = (): void => {
-			this._editorWidth = this._doc.showLetters ? (this._doc.showScrollBar ? 460 : 480) : (this._doc.showScrollBar ? 492 : 512);
+			this._editorWidth = this._doc.prefs.showLetters ? (this._doc.prefs.showScrollBar ? 460 : 480) : (this._doc.prefs.showScrollBar ? 492 : 512);
 			this._pattern = this._doc.getCurrentPattern();
 			this._partWidth = this._editorWidth / (this._doc.song.beatsPerBar * this._doc.song.partsPerBeat);
 			this._pitchHeight = this._doc.song.getChannelIsDrum(this._doc.channel) ? this._defaultDrumHeight : this._defaultPitchHeight;
@@ -828,7 +828,7 @@ import { ColorConfig } from "./ColorConfig";
 			this._updatePreview();
 		
 			for (let j: number = 0; j < 12; j++) {
-				this._backgroundPitchRows[j].style.visibility = Config.scaleFlags[this._doc.song.scale][j] ? "visible" : "hidden";
+				this._backgroundPitchRows[j].style.visibility = Config.scales[this._doc.song.scale].flags[j] ? "visible" : "hidden";
 			}
 			
 			if (this._doc.song.getChannelIsDrum(this._doc.channel)) {
@@ -847,7 +847,7 @@ import { ColorConfig } from "./ColorConfig";
 				}
 			}
 			
-			if (this._doc.showChannels) {
+			if (this._doc.prefs.showChannels) {
 				for (let channel: number = this._doc.song.getChannelCount() - 1; channel >= 0; channel--) {
 					if (channel == this._doc.channel) continue;
 					if (this._doc.song.getChannelIsDrum(channel) != this._doc.song.getChannelIsDrum(this._doc.channel)) continue;
@@ -904,49 +904,49 @@ import { ColorConfig } from "./ColorConfig";
 	
 	public render(): void {
 
-			if (this._doc.showMore == false) {
+			if (this._doc.prefs.showMore == false) {
 
-				if (this._renderedFifths != this._doc.showFifth) {
-					this._renderedFifths = this._doc.showFifth;
-					this._backgroundPitchRows[7].setAttribute("fill", this._doc.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
+				if (this._renderedFifths != this._doc.prefs.showFifth) {
+					this._renderedFifths = this._doc.prefs.showFifth;
+					this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
 				}
 
 				if (this._renderedPiano == true) {
 					this._renderedPiano = false;
 				}
-			if (this._renderedACS != this._doc.showMore) {
+			if (this._renderedACS != this._doc.prefs.showMore) {
 				this._backgroundPitchRows[0].setAttribute("fill", ColorConfig.tonic);
-				this._backgroundPitchRows[1].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch1Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[2].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch2Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[3].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch3Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[4].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch4Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[5].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch5Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[6].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch6Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[7].setAttribute("fill", this._doc.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[8].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch8Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[9].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch9Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[10].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch10Background : ColorConfig.pitchBackground);
-				this._backgroundPitchRows[11].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch11Background : ColorConfig.pitchBackground);
-				this._renderedACS = this._doc.showMore;
+				this._backgroundPitchRows[1].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch1Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[2].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch2Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[3].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch3Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[4].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch4Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[5].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch5Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[6].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch6Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[8].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch8Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[9].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch9Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[10].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch10Background : ColorConfig.pitchBackground);
+				this._backgroundPitchRows[11].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch11Background : ColorConfig.pitchBackground);
+				this._renderedACS = this._doc.prefs.showMore;
 				console.log("this._renderedACS (acs disabled): "+this._renderedACS);
 			}
 			this._setKey = -1;
 		} else {
 			if (ColorConfig.usesPianoScheme == false) {
-				if (this._renderedACS != this._doc.showMore || this._renderedPiano == true) {
-					this._backgroundPitchRows[0].setAttribute("fill", this._doc.showMore ? ColorConfig.tonic : ColorConfig.tonic);
-					this._backgroundPitchRows[1].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch1Background :  ColorConfig.pitchBackground);
-					this._backgroundPitchRows[2].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch2Background :  ColorConfig.pitchBackground);
-					this._backgroundPitchRows[3].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch3Background :  ColorConfig.pitchBackground);
-					this._backgroundPitchRows[4].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch4Background :  ColorConfig.pitchBackground);
-					this._backgroundPitchRows[5].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch5Background :  ColorConfig.pitchBackground);
-					this._backgroundPitchRows[6].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch6Background :  ColorConfig.pitchBackground);
-					this._backgroundPitchRows[7].setAttribute("fill", this._doc.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
-					this._backgroundPitchRows[8].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch8Background : ColorConfig.pitchBackground);
-					this._backgroundPitchRows[9].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch9Background : ColorConfig.pitchBackground);
-					this._backgroundPitchRows[10].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch10Background : ColorConfig.pitchBackground);
-					this._backgroundPitchRows[11].setAttribute("fill", this._doc.showMore ? ColorConfig.pitch11Background : ColorConfig.pitchBackground);
-					this._renderedACS = this._doc.showMore;
+				if (this._renderedACS != this._doc.prefs.showMore || this._renderedPiano == true) {
+					this._backgroundPitchRows[0].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.tonic : ColorConfig.tonic);
+					this._backgroundPitchRows[1].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch1Background :  ColorConfig.pitchBackground);
+					this._backgroundPitchRows[2].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch2Background :  ColorConfig.pitchBackground);
+					this._backgroundPitchRows[3].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch3Background :  ColorConfig.pitchBackground);
+					this._backgroundPitchRows[4].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch4Background :  ColorConfig.pitchBackground);
+					this._backgroundPitchRows[5].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch5Background :  ColorConfig.pitchBackground);
+					this._backgroundPitchRows[6].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch6Background :  ColorConfig.pitchBackground);
+					this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showFifth ? ColorConfig.fifthNote : ColorConfig.pitchBackground);
+					this._backgroundPitchRows[8].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch8Background : ColorConfig.pitchBackground);
+					this._backgroundPitchRows[9].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch9Background : ColorConfig.pitchBackground);
+					this._backgroundPitchRows[10].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch10Background : ColorConfig.pitchBackground);
+					this._backgroundPitchRows[11].setAttribute("fill", this._doc.prefs.showMore ? ColorConfig.pitch11Background : ColorConfig.pitchBackground);
+					this._renderedACS = this._doc.prefs.showMore;
 					console.log("this._renderedACS (acs enabled): "+this._renderedACS);
 				} 
 				if (this._renderedPiano == true) {
@@ -960,76 +960,76 @@ import { ColorConfig } from "./ColorConfig";
 						this._renderedPiano = true;
 						console.log("piano key"+this._setKey);
 						if ( (this._setKey == 0 ) || (this._setKey == 2 ) || (this._setKey == 4 ) || (this._setKey == 6 ) || (this._setKey == 7 ) || (this._setKey == 9 ) || (this._setKey == 11 )) {
-							this._backgroundPitchRows[0].setAttribute("fill", this._doc.showMore ? "var(--white-tonic, var(--pitch-white-key, var(--pitch-background)))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[0].setAttribute("fill", this._doc.prefs.showMore ? "var(--white-tonic, var(--pitch-white-key, var(--pitch-background)))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[0].setAttribute("fill", this._doc.showMore ? "var(--black-tonic, var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[0].setAttribute("fill", this._doc.prefs.showMore ? "var(--black-tonic, var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 0 ) || (this._setKey == 1 ) || (this._setKey == 3 ) || (this._setKey == 5 )|| (this._setKey == 7 ) ||(this._setKey == 8 ) || (this._setKey == 10)) {
-							this._backgroundPitchRows[1].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[1].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[1].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[1].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 1 )||(this._setKey == 2 )||(this._setKey == 4 )||(this._setKey == 6 )||(this._setKey == 8 )||(this._setKey == 9 )||(this._setKey == 11)) {
-							this._backgroundPitchRows[2].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[2].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[2].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[2].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 0 ) ||(this._setKey == 2 )||(this._setKey == 3 )||(this._setKey == 5 )||(this._setKey == 7 )||(this._setKey == 9 )||(this._setKey == 10)) {
-							this._backgroundPitchRows[3].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[3].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[3].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[3].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 1) ||(this._setKey == 3 )||(this._setKey == 4 )||(this._setKey == 6 )||(this._setKey == 8 )||(this._setKey == 10 )||(this._setKey == 11)) {
-							this._backgroundPitchRows[4].setAttribute("fill", this._doc.showMore ? " var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[4].setAttribute("fill", this._doc.prefs.showMore ? " var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[4].setAttribute("fill", this._doc.showMore ? " var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[4].setAttribute("fill", this._doc.prefs.showMore ? " var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 0 )||(this._setKey == 2 )||(this._setKey == 4 )||(this._setKey == 5 )||(this._setKey == 7 )||(this._setKey == 9 )||(this._setKey == 11)) {
-							this._backgroundPitchRows[5].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[5].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[5].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[5].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 0 ) ||(this._setKey == 1 )||(this._setKey == 3 )||(this._setKey == 5 )||(this._setKey == 6 )||(this._setKey == 8 )||(this._setKey == 10)) {
-							this._backgroundPitchRows[6].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[6].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[6].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[6].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 1) ||(this._setKey == 2) ||(this._setKey == 4 )||(this._setKey == 6 )||(this._setKey == 7 )||(this._setKey == 9 )||(this._setKey == 11)) {
-							if (this._doc.showFifth == true) {
-								this._backgroundPitchRows[7].setAttribute("fill", this._doc.showMore ? "var(--white-fifth-note, var(--pitch-white-key, var(--pitch-background)))" : ColorConfig.pitchBackground);
+							if (this._doc.prefs.showFifth == true) {
+								this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showMore ? "var(--white-fifth-note, var(--pitch-white-key, var(--pitch-background)))" : ColorConfig.pitchBackground);
 							} else {
-								this._backgroundPitchRows[7].setAttribute("fill", this._doc.showMore ? " var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+								this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showMore ? " var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 							}
 						} else {
-							if (this._doc.showFifth == true) {
-								this._backgroundPitchRows[7].setAttribute("fill", this._doc.showMore ? "var(--black-fifth-note, var(--pitch-black-key, var(--pitch-background)))" : ColorConfig.pitchBackground);
+							if (this._doc.prefs.showFifth == true) {
+								this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showMore ? "var(--black-fifth-note, var(--pitch-black-key, var(--pitch-background)))" : ColorConfig.pitchBackground);
 							} else {
-								this._backgroundPitchRows[7].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+								this._backgroundPitchRows[7].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 							}
 						}
 						if ((this._setKey == 0 ) || (this._setKey == 2 ) || (this._setKey == 3 ) || (this._setKey == 5) || (this._setKey == 7) || (this._setKey == 8) || (this._setKey == 10)) {
-							this._backgroundPitchRows[8].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[8].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[8].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[8].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 1 )|| (this._setKey ==3 )||(this._setKey == 4 )||(this._setKey == 6 )||(this._setKey == 8 )||(this._setKey == 9 )||(this._setKey == 11)) {
-							this._backgroundPitchRows[9].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[9].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[9].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[9].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 						if ((this._setKey == 0) ||(this._setKey == 2 )||(this._setKey == 4 )||(this._setKey == 5 )||(this._setKey == 7 )||(this._setKey == 9) ||(this._setKey == 10)) {
-							this._backgroundPitchRows[10].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[10].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[10].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[10].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
 
 						if ((this._setKey == 1 )||(this._setKey == 3 )||(this._setKey == 5 )||(this._setKey == 6 )||(this._setKey == 8 )||(this._setKey == 10 )||(this._setKey == 11)) {
-							this._backgroundPitchRows[11].setAttribute("fill", this._doc.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[11].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-white-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						} else {
-							this._backgroundPitchRows[11].setAttribute("fill", this._doc.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
+							this._backgroundPitchRows[11].setAttribute("fill", this._doc.prefs.showMore ? "var(--pitch-black-key, var(--pitch-background))" : ColorConfig.pitchBackground);
 						}
-					if (this._renderedACS != this._doc.showMore) {
-					this._renderedACS = this._doc.showMore;
+					if (this._renderedACS != this._doc.prefs.showMore) {
+					this._renderedACS = this._doc.prefs.showMore;
 					console.log("this._renderedACS (in piano): "+this._renderedACS);
 					}
 				} 

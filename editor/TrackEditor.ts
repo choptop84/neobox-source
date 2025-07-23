@@ -318,7 +318,7 @@ import { ColorConfig } from "./ColorConfig";
 					this._grid[y] = [];
 					for (let x: number = 0; x < this._renderedBarCount; x++) {
 						//const box: Box = new Box(y, x, y, this._doc.song.getChannelColorDim(y), this._doc.showVolumeBar);
-						const box: Box = new Box(y, x, y, ColorConfig.getChannelColor(this._doc.song, y).secondaryChannel, this._doc.showVolumeBar);
+						const box: Box = new Box(y, x, y, ColorConfig.getChannelColor(this._doc.song, y).secondaryChannel, this._doc.prefs.showVolumeBar);
 						box.setSquashed(squashed, y);
 						this._boxContainer.appendChild(box.container);
 						this._grid[y][x] = box;
@@ -337,7 +337,7 @@ import { ColorConfig } from "./ColorConfig";
 			if (this._renderedBarCount < this._doc.song.barCount) {
 				for (let y: number = 0; y < this._doc.song.getChannelCount(); y++) {
 					for (let x: number = this._renderedBarCount; x < this._doc.song.barCount; x++) {
-						const box: Box = new Box(y, x, y, ColorConfig.getChannelColor(this._doc.song, y).secondaryChannel, this._doc.showVolumeBar);
+						const box: Box = new Box(y, x, y, ColorConfig.getChannelColor(this._doc.song, y).secondaryChannel, this._doc.prefs.showVolumeBar);
 						box.setSquashed(squashed, y);
 						this._boxContainer.appendChild(box.container);
 						this._grid[y][x] = box;
@@ -393,7 +393,7 @@ import { ColorConfig } from "./ColorConfig";
 							dim && !selected && !mute ? ColorConfig.getChannelColor(this._doc.song, j).secondaryChannel : mute && !selected ? "#161616" : ColorConfig.getChannelColor(this._doc.song, j).primaryChannel,
 							volume,
 							dim && !selected && !mute ? ColorConfig.getChannelColor(this._doc.song, j).secondaryChannel : mute && !selected ? "#9b9b9b" : ColorConfig.getChannelColor(this._doc.song, j).secondaryChannel,
-							this._doc.showVolumeBar,
+							this._doc.prefs.showVolumeBar,
 							this._doc.song.mix
 						);
 						box.container.style.visibility = "visible";

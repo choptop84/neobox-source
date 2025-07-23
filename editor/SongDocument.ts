@@ -28,6 +28,9 @@ import { ChangeSong } from "./changes";
 import { ColorConfig } from "./ColorConfig"; 
 import { Layout } from "./Layout";
 import {Selection} from "./Selection.js";
+import { Config } from "../synth/SynthConfig";
+
+import { Preferences } from "./Preferences";
 
 	interface HistoryState {
 		canUndo: boolean;
@@ -44,20 +47,10 @@ import {Selection} from "./Selection.js";
 		public readonly selection: Selection = new Selection(this);
 		public channel: number = 0;
 		public bar: number = 0;
-		public autoPlay: boolean;
-		public autoFollow: boolean;
-		public showFifth: boolean;
-		public showMore: boolean;
-		public showLetters: boolean;
-		public showChannels: boolean;
-		public showScrollBar: boolean;
-		public showVolumeBar: boolean;
-		public layout: string;
-		public advancedSettings: boolean;
-		public volume: number = 75;
 		public trackVisibleBars: number = 16;
 		public barScrollPos: number = 0;
 		public prompt: string | null = null;
+		public readonly prefs: Preferences = new Preferences();
 		
 		private _recentChange: Change | null = null;
 		private _sequenceNumber: number = 0;
@@ -69,18 +62,6 @@ import {Selection} from "./Selection.js";
 		constructor(string?: string) {
 			this.song = new Song(string);
 			this.synth = new Synth(this.song);
-			
-			this.autoPlay = localStorage.getItem("autoPlay") == "true";
-			this.autoFollow = localStorage.getItem("autoFollow") == "true";
-			this.showFifth = localStorage.getItem("showFifth") == "true";
-			this.showMore = localStorage.getItem("showMore") == "true";
-			this.showLetters = localStorage.getItem("showLetters") == "true";
-			this.showChannels = localStorage.getItem("showChannels") == "true";
-			this.showScrollBar = localStorage.getItem("showScrollBar") == "true";
-			this.showVolumeBar = localStorage.getItem("showVolumeBar") == "true";
-			this.advancedSettings = localStorage.getItem("advancedSettings") != "false";
-			this.layout = localStorage.getItem("layout") || "small";
-			if (localStorage.getItem("volume") != null) this.volume = Number(localStorage.getItem("volume"));
 
 			this.synth.volume = this._calcVolume();
 			
@@ -232,22 +213,9 @@ import {Selection} from "./Selection.js";
 			return change != null && change == this._recentChange;
 		}
 		
-		public savePreferences(): void {
-			localStorage.setItem("autoPlay", this.autoPlay ? "true" : "false");
-			localStorage.setItem("autoFollow", this.autoFollow ? "true" : "false");
-			localStorage.setItem("showFifth", this.showFifth ? "true" : "false");
-			localStorage.setItem("showMore", this.showMore ? "true" : "false");
-			localStorage.setItem("showLetters", this.showLetters ? "true" : "false");
-			localStorage.setItem("showChannels", this.showChannels ? "true" : "false");
-			localStorage.setItem("showScrollBar", this.showScrollBar ? "true" : "false");
-			localStorage.setItem("showVolumeBar", this.showVolumeBar ? "true" : "false");
-			localStorage.setItem("advancedSettings", this.advancedSettings ? "true" : "false");
-			localStorage.setItem("volume", String(this.volume));
-		}
-		
 		public setVolume(val: number): void {
-			this.volume = val;
-			this.savePreferences();
+			this.prefs.volume = val;
+			this.prefs.save();
 			this.synth.volume = this._calcVolume();
 		}
 		
@@ -256,11 +224,11 @@ import {Selection} from "./Selection.js";
 		}
 
 		public getFullScreen(): boolean {
-			return !this.getMobileLayout() && (this.layout != "small");
+			return !this.getMobileLayout() && (this.prefs.layout != "small");
 		}
 
 		private _calcVolume(): number {
-			return Math.min(1.0, Math.pow(this.volume / 50.0, 0.5)) * Math.pow(2.0, (this.volume - 75.0) / 25.0);
+			return Math.min(1.0, Math.pow(this.prefs.volume / 50.0, 0.5)) * Math.pow(2.0, (this.prefs.volume - 75.0) / 25.0);
 		}
 		
 		public getCurrentPattern(): Pattern | null {
@@ -270,6 +238,19 @@ import {Selection} from "./Selection.js";
 		public getCurrentInstrument(): number {
 			const pattern: Pattern | null = this.getCurrentPattern();
 			return pattern == null ? 0 : pattern.instrument;
+		}
+
+		public getVisibleOctaveCount(): number {
+		return this.getFullScreen() ? this.prefs.visibleOctaves : Preferences.defaultVisibleOctaves;
+		}
+		
+		public getVisiblePitchCount(): number {
+			return this.getVisibleOctaveCount() * Config.pitchesPerOctave + 1;
+		}
+
+		public getBaseVisibleOctave(channel: number): number {
+		const visibleOctaveCount: number = this.getVisibleOctaveCount();
+		return Math.max(0, Math.min(Config.pitchOctaves - visibleOctaveCount, Math.ceil(this.song.channels[channel].octave - visibleOctaveCount * 0.5)));
 		}
 	}
 

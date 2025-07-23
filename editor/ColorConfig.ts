@@ -2336,8 +2336,8 @@ export class ColorConfig {
 	public static readonly octaveScrollbar: string = "var(--octave-scrollbar, #444444)";
 	public static readonly scrollbarOctave: string = "var(--scrollbar-octave, #886644)";
 	public static readonly channelBox: string = "var(--channel-box, #444444)";
-	public static readonly blackPianoKey: string = "var(--black-piano-key, #000)";
-	public static readonly whitePianoKey: string = "var(--white-piano-key, #fff)";
+	public static readonly blackPianoKey: string = "var(--black-piano-key, #444)";
+	public static readonly whitePianoKey: string = "var(--white-piano-key, #bbb)";
 	
 	public static readonly pitchChannels: DictionaryArray<ChannelColors> = toNameMap([
         {

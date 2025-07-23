@@ -216,7 +216,7 @@ const {button, div, span, select, option, input, a} = HTML;
 				SVG.path({d: "M -8 3 L -8 8 L 8 8 L 8 3 L 6 3 L 6 6 L -6 6 L -6 3 z M 0 2 L -4 -2 L -1 -2 L -1 -8 L 1 -8 L 1 -2 L 4 -2 z", fill: "currentColor"}),
 			),
 		);
-		private readonly _scaleSelect: HTMLSelectElement = buildOptions(select({}), Config.scaleNames);
+		private readonly _scaleSelect: HTMLSelectElement = buildOptions(select({}), Config.scales.map(scale=>scale.name));
 		private readonly _mixSelect: HTMLSelectElement = buildOptions(select({}), Config.mixNames);
 		private readonly _sampleRateSelect: HTMLSelectElement = buildOptions(select({}), Config.sampleRateNames);
 		private readonly _mixHint: HTMLAnchorElement = <HTMLAnchorElement> a({ class: "hintButton" }, div({},"?"));
@@ -224,7 +224,7 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _mixSelectRow: HTMLDivElement = div({class: "selectRow"}, this._mixHint, this._mixSelect);
 		// private readonly _chipHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _instrumentTypeHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
-		private readonly _keySelect: HTMLSelectElement = buildOptions(select({}), Config.keyNames);
+		private readonly _keySelect: HTMLSelectElement = buildOptions(select({}), Config.keys.map(key=>key.name).reverse());
 		private readonly _tempoSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.tempoSteps - 1, value: "7", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeTempo(this._doc, oldValue, newValue));
 		private readonly _reverbSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.reverbRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeReverb(this._doc, oldValue, newValue));
 		private readonly _blendSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.blendRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeBlend(this._doc, oldValue, newValue));
@@ -604,19 +604,19 @@ const {button, div, span, select, option, input, a} = HTML;
 				songThemeSet = this._doc.song.setSongTheme;
 			} 
 
-			document.documentElement.style.setProperty("--full-layout-columns", this._doc.advancedSettings ? "minmax(0, 1fr) 190px 200px": "minmax(0, 1fr) 190px");
-			document.documentElement.style.setProperty("--middle-layout-columns", this._doc.advancedSettings ? "190px minmax(0, 1fr) 200px" : "190px minmax(0, 1fr)");
+			document.documentElement.style.setProperty("--full-layout-columns", this._doc.prefs.advancedSettings ? "minmax(0, 1fr) 190px 200px": "minmax(0, 1fr) 190px");
+			document.documentElement.style.setProperty("--middle-layout-columns", this._doc.prefs.advancedSettings ? "190px minmax(0, 1fr) 200px" : "190px minmax(0, 1fr)");
 
 			const optionCommands: ReadonlyArray<string> = [
-				(this._doc.autoPlay ? "✓ " : "✗ ") + "Auto Play On Load",
-				(this._doc.autoFollow ? "✓ " : "✗ ") + "Auto Follow Track",
-				(this._doc.showLetters ? "✓ " : "✗ ") + "Show Piano",
-				(this._doc.showFifth ? "✓ " : "✗ ") + "Highlight 'Fifth' Notes",
-				(this._doc.showMore ? "✓ " : "✗ ") + "Advanced Color Scheme",
-				(this._doc.showChannels ? "✓ " : "✗ ") + "Show All Channels",
-				(this._doc.showScrollBar ? "✓ " : "✗ ") + "Octave Scroll Bar",
-				(this._doc.showVolumeBar ? "✓ " : "✗ ") + "Show Channel Volume",
-				(this._doc.advancedSettings ? "✓ " : "✗ ") + "Enable Advanced Settings",
+				(this._doc.prefs.autoPlay ? "✓ " : "✗ ") + "Auto Play On Load",
+				(this._doc.prefs.autoFollow ? "✓ " : "✗ ") + "Auto Follow Track",
+				(this._doc.prefs.showLetters ? "✓ " : "✗ ") + "Show Piano",
+				(this._doc.prefs.showFifth ? "✓ " : "✗ ") + "Highlight 'Fifth' Notes",
+				(this._doc.prefs.showMore ? "✓ " : "✗ ") + "Advanced Color Scheme",
+				(this._doc.prefs.showChannels ? "✓ " : "✗ ") + "Show All Channels",
+				(this._doc.prefs.showScrollBar ? "✓ " : "✗ ") + "Octave Scroll Bar",
+				(this._doc.prefs.showVolumeBar ? "✓ " : "✗ ") + "Show Channel Volume",
+				(this._doc.prefs.advancedSettings ? "✓ " : "✗ ") + "Enable Advanced Settings",
 				"  Set Theme...",
 			]
 			for (let i: number = 0; i < optionCommands.length; i++) {
@@ -635,11 +635,11 @@ const {button, div, span, select, option, input, a} = HTML;
 			setSelectedIndex(this._scaleSelect, this._doc.song.scale);
 			setSelectedIndex(this._mixSelect, this._doc.song.mix);
 			setSelectedIndex(this._sampleRateSelect, this._doc.song.sampleRate);
-			setSelectedIndex(this._keySelect, this._doc.song.key);
+			setSelectedIndex(this._keySelect, Config.keys.length - 1 - this._doc.song.key);
 			this._tempoSlider.updateValue(this._doc.song.tempo);
 			this._tempoSlider.input.title = this._doc.song.getBeatsPerMinute() + " beats per minute";
 			this._reverbSlider.updateValue(this._doc.song.reverb);
-			this._advancedSettingsContainer.style.display = this._doc.advancedSettings ? "" : "none";
+			this._advancedSettingsContainer.style.display = this._doc.prefs.advancedSettings ? "" : "none";
 			this._blendSlider.updateValue(this._doc.song.blend);
 			this._riffSlider.updateValue(this._doc.song.riff);
 			this._detuneSlider.updateValue(this._doc.song.detune);
@@ -792,8 +792,8 @@ const {button, div, span, select, option, input, a} = HTML;
 				this._operatorEnvelopeSelects[i].parentElement!.style.color = (instrument.operators[i].amplitude > 0) ? "" : "#999";
 			}
 			
-			this._piano.container.style.display = this._doc.showLetters ? "" : "none";
-			this._octaveScrollBar.container.style.display = this._doc.showScrollBar ? "" : "none";
+			this._piano.container.style.display = this._doc.prefs.showLetters ? "" : "none";
+			this._octaveScrollBar.container.style.display = this._doc.prefs.showScrollBar ? "" : "none";
 			this._barScrollBar.container.style.display = this._doc.song.barCount > this._doc.trackVisibleBars ? "" : "none";
 			// this._chipHint.style.display = (instrument.type == InstrumentType.fm) ? "none" : "";
 			this._instrumentTypeHint.style.display = (instrument.type == InstrumentType.fm) ? "" : "none";
@@ -801,11 +801,11 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._chorusHint.style.display = (Config.harmNames[instrument.harm]) ? "" : "none";
 			
 			let patternWidth: number = 512;
-			if (this._doc.showLetters) patternWidth -= 32;
-			if (this._doc.showScrollBar) patternWidth -= 20;
+			if (this._doc.prefs.showLetters) patternWidth -= 32;
+			if (this._doc.prefs.showScrollBar) patternWidth -= 20;
 			this._patternEditor.container.style.width = String(patternWidth) + "px";
 			
-			this._volumeSlider.value = String(this._doc.volume);
+			this._volumeSlider.value = String(this._doc.prefs.volume);
 			
 			// If an interface element was selected, but becomes invisible (e.g. an instrument
 			// select menu) just select the editor container so keyboard commands still work.
@@ -815,7 +815,7 @@ const {button, div, span, select, option, input, a} = HTML;
 			
 			this._setPrompt(this._doc.prompt);
 			
-			if (this._doc.autoFollow && !this._doc.synth.playing) {
+			if (this._doc.prefs.autoFollow && !this._doc.synth.playing) {
 				this._doc.synth.snapToBar(this._doc.bar);
 			}
 		}
@@ -1051,14 +1051,14 @@ const {button, div, span, select, option, input, a} = HTML;
 					break;
 				case 219: // left brace
 					this._doc.synth.prevBar();
-					if (this._doc.autoFollow) {
+					if (this._doc.prefs.autoFollow) {
 						new ChangeChannelBar(this._doc, this._doc.channel, Math.floor(this._doc.synth.playhead));
 					}
 					event.preventDefault();
 					break;
 				case 221: // right brace
 					this._doc.synth.nextBar();
-					if (this._doc.autoFollow) {
+					if (this._doc.prefs.autoFollow) {
 						new ChangeChannelBar(this._doc, this._doc.channel, Math.floor(this._doc.synth.playhead));
 					}
 					event.preventDefault();
@@ -1103,7 +1103,7 @@ const {button, div, span, select, option, input, a} = HTML;
 		
 		private _pause(): void {
 			this._doc.synth.pause();
-			if (this._doc.autoFollow) {
+			if (this._doc.prefs.autoFollow) {
 				this._doc.synth.snapToBar(this._doc.bar);
 			} else {
 				this._doc.synth.snapToBar();
@@ -1226,7 +1226,7 @@ const {button, div, span, select, option, input, a} = HTML;
 		}
 		
 		private _whenSetKey = (): void => {
-			this._doc.record(new ChangeKey(this._doc, this._keySelect.selectedIndex));
+			this._doc.record(new ChangeKey(this._doc, Config.keys.length - 1 - this._keySelect.selectedIndex));
 		}
 		
 		private _whenSetPartsPerBeat = (): void => {
@@ -1355,31 +1355,31 @@ const {button, div, span, select, option, input, a} = HTML;
 		private _optionsMenuHandler = (event:Event): void => {
 			switch (this._optionsMenu.value) {
 				case "autoPlay":
-					this._doc.autoPlay = !this._doc.autoPlay;
+					this._doc.prefs.autoPlay = !this._doc.prefs.autoPlay;
 					break;
 				case "autoFollow":
-					this._doc.autoFollow = !this._doc.autoFollow;
+					this._doc.prefs.autoFollow = !this._doc.prefs.autoFollow;
 					break;
 				case "showLetters":
-					this._doc.showLetters = !this._doc.showLetters;
+					this._doc.prefs.showLetters = !this._doc.prefs.showLetters;
 					break;
 				case "showFifth":
-					this._doc.showFifth = !this._doc.showFifth;
+					this._doc.prefs.showFifth = !this._doc.prefs.showFifth;
 					break;
 				case "showMore":
-					this._doc.showMore = !this._doc.showMore;
+					this._doc.prefs.showMore = !this._doc.prefs.showMore;
 					break;
 				case "showChannels":
-					this._doc.showChannels = !this._doc.showChannels;
+					this._doc.prefs.showChannels = !this._doc.prefs.showChannels;
 					break;
 				case "showScrollBar":
-					this._doc.showScrollBar = !this._doc.showScrollBar;
+					this._doc.prefs.showScrollBar = !this._doc.prefs.showScrollBar;
 					break;
 				case "showVolumeBar":
-					this._doc.showVolumeBar = !this._doc.showVolumeBar;
+					this._doc.prefs.showVolumeBar = !this._doc.prefs.showVolumeBar;
 					break;
 				case "advancedSettings":
-					this._doc.advancedSettings = !this._doc.advancedSettings;
+					this._doc.prefs.advancedSettings = !this._doc.prefs.advancedSettings;
 					break;
 				case "themes":
 					this._openPrompt("themes");
@@ -1390,7 +1390,7 @@ const {button, div, span, select, option, input, a} = HTML;
 			}
 			this._optionsMenu.selectedIndex = 0;
 			this._doc.notifier.changed();
-			this._doc.savePreferences();
+			this._doc.prefs.save();
 		}
 	}
 	

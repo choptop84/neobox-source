@@ -22,14 +22,15 @@ SOFTWARE.
 
 import { Config, Dictionary, InstrumentType, EnvelopeType } from "./SynthConfig";
 import { Instrument, Song, Note, NotePin, Pattern } from "./song";
+//import { Deque } from "./Deque";
 
-declare global {
-	interface Window {
-		AudioContext: any;
-		webkitAudioContext: any;
+	declare global {
+		interface Window {
+			AudioContext: any;
+			webkitAudioContext: any;
+		}
 	}
-}
-	
+
 	class SynthChannel {
 		public sampleLeft: number = 0.0;
 		public sampleRight: number = 0.0;
@@ -63,6 +64,66 @@ declare global {
 		}
 	}
 	
+	export class Tone {
+		public instrument: Instrument;
+		public readonly pitches: number[] = [0, 0, 0, 0];
+		public pitchCount: number = 0;
+		public chordSize: number = 0;
+		public drumsetPitch: number = 0;
+		public note: Note | null = null;
+		public prevNote: Note | null = null;
+		public nextNote: Note | null = null;
+		public prevNotePitchIndex: number = 0;
+		public nextNotePitchIndex: number = 0;
+		public active: boolean = false;
+		public noteStart: number = 0;
+		public noteEnd: number = 0;
+		public noteLengthTicks: number = 0;
+		public ticksSinceReleased: number = 0;
+		public liveInputSamplesHeld: number = 0;
+		public lastInterval: number = 0;
+		public lastVolume: number = 0;
+		public stereoVolume1: number = 0.0;
+		public stereoVolume2: number = 0.0;
+		public stereoOffset: number = 0.0;
+		public stereoDelay: number = 0.0;
+		public sample: number = 0.0;
+		public readonly phases: number[] = [];
+		public readonly phaseDeltas: number[] = [];
+		public readonly volumeStarts: number[] = [];
+		public readonly volumeDeltas: number[] = [];
+		public volumeStart: number = 0.0;
+		public volumeDelta: number = 0.0;
+		public phaseDeltaScale: number = 0.0;
+		public pulseWidth: number = 0.0;
+		public pulseWidthDelta: number = 0.0;
+		public filter: number = 0.0;
+		public filterScale: number = 0.0;
+		public filterSample0: number = 0.0;
+		public filterSample1: number = 0.0;
+		public vibratoScale: number = 0.0;
+		public intervalMult: number = 0.0;
+		public intervalVolumeMult: number = 1.0;
+		public feedbackOutputs: number[] = [];
+		public feedbackMult: number = 0.0;
+		public feedbackDelta: number = 0.0;
+		
+		constructor() {
+			this.reset();
+		}
+		
+		public reset(): void {
+			for (let i: number = 0; i < Config.operatorCount; i++) {
+				this.phases[i] = 0.0;
+				this.feedbackOutputs[i] = 0.0;
+			}
+			this.sample = 0.0;
+			this.filterSample0 = 0.0;
+			this.filterSample1 = 0.0;
+			this.liveInputSamplesHeld = 0.0;
+		}
+	}
+
 	export class Synth {
 		
 		private static warmUpSynthesizer(song: Song | null): void {
@@ -101,13 +162,20 @@ declare global {
 		public loopCount: number = -1;
 		public volume: number = 1.0;
 		
+		public liveInputDuration: number = 0;
+		public liveInputStarted: boolean = false;
+		public liveInputPitches: number[] = [];
+		public liveInputChannel: number = 0;
+		
 		private playheadInternal: number = 0.0;
 		private bar: number = 0;
 		private beat: number = 0;
 		private part: number = 0;
 		private arpeggio: number = 0;
-		private arpeggioSampleCountdown: number = 0;
-		private paused: boolean = true;
+		private arpSampleCountdown: number = 0;
+		private isPlaying: boolean = false;
+		private liveInputEndTime: number = 0.0;
+		private browserAutomaticallyClearsAudioBuffer: boolean = true;
 		
 		private readonly channels: SynthChannel[] = [];
 		public stillGoing: boolean = false;
@@ -127,11 +195,11 @@ declare global {
 		public delayFeedback3Left: number = 0.0;
 		public delayFeedback3Right: number = 0.0;
 		
-		private audioCtx: any;
-		private scriptNode: any;
+		private audioCtx: any | null = null;
+		private scriptNode: any | null = null;
 		
 		public get playing(): boolean {
-			return !this.paused;
+			return this.isPlaying;
 		}
 		
 		public get playhead(): number {
@@ -149,9 +217,9 @@ declare global {
 				this.part = Math.floor(remainder);
 				remainder = 4 * (remainder - this.part);
 				this.arpeggio = Math.floor(remainder);
-				const samplesPerArpeggio: number = this.getSamplesPerArpeggio();
-				remainder = samplesPerArpeggio * (remainder - this.arpeggio);
-				this.arpeggioSampleCountdown = Math.floor(samplesPerArpeggio - remainder);
+				const samplesPerTick: number = this.getSamplesPerArpeggio();
+				remainder = samplesPerTick * (remainder - this.arpeggio);
+				this.arpSampleCountdown = Math.floor(samplesPerTick - remainder);
 				if (this.bar < this.song.loopStart) {
 					this.enableIntro = true;
 				}
@@ -207,38 +275,117 @@ declare global {
 			else if (this.song!.sampleRate == 8) return this.audioCtx.sampleRate / 16;
 			else return this.audioCtx.sampleRate;
 		}
+
+		private activateAudio(): void {
+			if (this.audioCtx == null || this.scriptNode == null) {
+				if (this.scriptNode != null) this.deactivateAudio();
+				this.audioCtx = this.audioCtx || new (window.AudioContext || window.webkitAudioContext);
+				this.samplesPerSecond = this.spsCalc();
+				this.scriptNode = this.audioCtx.createScriptProcessor ? this.audioCtx.createScriptProcessor(2048, 0, 2) : this.audioCtx.createJavaScriptNode(2048, 0, 2); 
+				this.scriptNode.onaudioprocess = this.audioProcessCallback;
+				this.scriptNode.channelCountMode = 'explicit';
+				this.scriptNode.channelInterpretation = 'speakers';
+
+				this.effectAngle = Math.PI * 2.0 / (this.effectDuration * this.samplesPerSecond);
+				this.effectYMult = 2.0 * Math.cos(this.effectAngle);
+				this.limitDecay = 1.0 / (2.0 * this.samplesPerSecond);
+				
+				this.scriptNode.connect(this.audioCtx.destination);
+			}
+			this.audioCtx.resume();
+		}
 		
+		private deactivateAudio(): void {
+			if (this.audioCtx != null && this.scriptNode != null) {
+				this.scriptNode.disconnect(this.audioCtx.destination);
+				this.scriptNode = null;
+				if (this.audioCtx.close) this.audioCtx.close(); // firefox is missing this function?
+				this.audioCtx = null;
+			}
+		}
+
+			public maintainLiveInput(): void {
+				this.activateAudio();
+				this.liveInputEndTime = performance.now() + 10000.0;
+			}
+
 		public play(): void {
-			if (!this.paused) return;
-			this.paused = false;
+			if (this.isPlaying) return;
+			this.isPlaying = true;
 			
 			Synth.warmUpSynthesizer(this.song);
-			
-			const contextClass = (window.AudioContext);
-			this.audioCtx = this.audioCtx || new contextClass();
-			this.scriptNode = this.audioCtx.createScriptProcessor ? this.audioCtx.createScriptProcessor(2048, 0, 2) : this.audioCtx.createJavaScriptNode(2048, 0, 2); // 2048, 0 input channels, 2 outputs
-			this.scriptNode.onaudioprocess = this.audioProcessCallback;
-			this.scriptNode.connect(this.audioCtx.destination);
-			this.scriptNode.channelCountMode = 'explicit';
-			this.scriptNode.channelInterpretation = 'speakers';
-			
-			this.samplesPerSecond = this.spsCalc();
-			this.effectAngle = Math.PI * 2.0 / (this.effectDuration * this.samplesPerSecond);
-			this.effectYMult = 2.0 * Math.cos(this.effectAngle);
-			this.limitDecay = 1.0 / (2.0 * this.samplesPerSecond);
+			this.activateAudio();
 		}
 		
 		public pause(): void {
-			if (this.paused) return;
-			this.paused = true;
-			// this.scriptNode.disconnect(this.audioCtx.destination);
-			if (this.audioCtx.close) {
-				this.audioCtx.close(); // firefox is missing this function?
-				this.audioCtx = null;
-			}
+			if (!this.isPlaying) return;
+			this.isPlaying = false;
+			this.deactivateAudio();
 			this.scriptNode = null;
 		}
 		
+		/*private determineLiveInputTones(song: Song): void {
+			const toneList: Deque<Tone> = this.liveInputTones;
+			const pitches: number[] = this.liveInputPitches;
+			let toneCount: number = 0;
+			if (this.liveInputDuration > 0) {
+				const instrument: Instrument = song.channels[this.liveInputChannel].instruments[song.getPatternInstrument(this.liveInputChannel, this.bar)];
+				
+				if (instrument.getChord().arpeggiates) {
+					let tone: Tone;
+					if (toneList.count() == 0) {
+						tone = this.newTone();
+						toneList.pushBack(tone);
+					} else if (!instrument.getTransition().isSeamless && this.liveInputStarted) {
+						this.releaseTone(this.liveInputChannel, toneList.popFront());
+						tone = this.newTone();
+						toneList.pushBack(tone);
+					} else {
+						tone = toneList.get(0);
+					}
+					toneCount = 1;
+				
+					for (let i: number = 0; i < pitches.length; i++) {
+						tone.pitches[i] = pitches[i];
+					}
+					tone.pitchCount = pitches.length;
+					tone.chordSize = 1;
+					tone.instrument = instrument;
+					tone.note = tone.prevNote = tone.nextNote = null;
+				} else {
+					//const transition: Transition = instrument.getTransition();
+					for (let i: number = 0; i < pitches.length; i++) {
+						//const strumOffsetParts: number = i * instrument.getChord().strumParts;
+
+						let tone: Tone;
+						if (toneList.count() <= i) {
+							tone = this.newTone();
+							toneList.pushBack(tone);
+						} else if (!instrument.getTransition().isSeamless && this.liveInputStarted) {
+							this.releaseTone(this.liveInputChannel, toneList.get(i));
+							tone = this.newTone();
+							toneList.set(i, tone);
+						} else {
+							tone = toneList.get(i);
+						}
+						toneCount++;
+
+						tone.pitches[0] = pitches[i];
+						tone.pitchCount = 1;
+						tone.chordSize = pitches.length;
+						tone.instrument = instrument;
+						tone.note = tone.prevNote = tone.nextNote = null;
+					}
+				}
+			}
+			
+			while (toneList.count() > toneCount) {
+				this.releaseTone(this.liveInputChannel, toneList.popBack());
+			}
+			
+			this.liveInputStarted = false;
+		}*/
+
 		public snapToStart(): void {
 			this.bar = 0;
 			this.enableIntro = true;
@@ -251,7 +398,7 @@ declare global {
 			this.beat = 0;
 			this.part = 0;
 			this.arpeggio = 0;
-			this.arpeggioSampleCountdown = 0;
+			this.arpSampleCountdown = 0;
 			this.effectPhase = 0.0;
 			
 			for (const channel of this.channels) channel.reset();
@@ -307,17 +454,36 @@ declare global {
 		
 		private audioProcessCallback = (audioProcessingEvent: any): void => {
 			const outputBuffer = audioProcessingEvent.outputBuffer;
-			const outputDataLeft: Float32Array = outputBuffer.getChannelData(0);
-			const outputDataRight: Float32Array = outputBuffer.getChannelData(1);
-			this.synthesize(outputDataLeft, outputDataRight, outputBuffer.length);
+			const outputDataL: Float32Array = outputBuffer.getChannelData(0);
+			const outputDataR: Float32Array = outputBuffer.getChannelData(1);
+
+			if (this.browserAutomaticallyClearsAudioBuffer && (outputDataL[0] != 0.0 || outputDataR[0] != 0.0 || outputDataL[outputBuffer.length-1] != 0.0 || outputDataR[outputBuffer.length-1] != 0.0)) {
+			// If the buffer is ever initially nonzero, then this must be an older browser that doesn't automatically clear the audio buffer.
+			this.browserAutomaticallyClearsAudioBuffer = false;
+			}
+			if (!this.browserAutomaticallyClearsAudioBuffer) {
+				// If this browser does not clear the buffer automatically, do so manually before continuing.
+				const length: number = outputBuffer.length;
+				for (let i: number = 0; i < length; i++) {
+					outputDataL[i] = 0.0;
+					outputDataR[i] = 0.0;
+				}
+			}
+
+			if (!this.isPlaying && performance.now() >= this.liveInputEndTime) { 
+				this.deactivateAudio();
+			} else {
+				this.synthesize(outputDataL, outputDataR, outputBuffer.length, this.isPlaying);
+			}
 		}
 		
-		public synthesize(dataLeft: Float32Array, dataRight: Float32Array, bufferLength: number): void {
+		public synthesize(dataLeft: Float32Array, dataRight: Float32Array, bufferLength: number, playSong: boolean = true): void {
 			if (this.song == null) {
 				for (let i: number = 0; i < bufferLength; i++) {
 					dataLeft[i] = 0.0;
 					dataRight[i] = 0.0;
 				}
+				this.deactivateAudio();
 				return;
 			}
 			
@@ -327,44 +493,46 @@ declare global {
 			}
 			this.channels.length = channelCount;
 			
-			const samplesPerArpeggio: number = this.getSamplesPerArpeggio();
+			const samplesPerTick: number = this.getSamplesPerArpeggio();
 			let bufferIndex: number = 0;
 			let ended: boolean = false;
 			
 			// Check the bounds of the playhead:
-			if (this.arpeggioSampleCountdown == 0 || this.arpeggioSampleCountdown > samplesPerArpeggio) {
-				this.arpeggioSampleCountdown = samplesPerArpeggio;
+			if (this.arpSampleCountdown == 0 || this.arpSampleCountdown > samplesPerTick) {
+				this.arpSampleCountdown = samplesPerTick;
 			}
-			if (this.part >= this.song.partsPerBeat) {
-				this.beat++;
-				this.part = 0;
-				this.arpeggio = 0;
-				this.arpeggioSampleCountdown = samplesPerArpeggio;
-			}
-			if (this.beat >= this.song.beatsPerBar) {
-				this.bar++;
-				this.beat = 0;
-				this.part = 0;
-				this.arpeggio = 0;
-				this.arpeggioSampleCountdown = samplesPerArpeggio;
-				
-				if (this.loopCount == -1) {
-					if (this.bar < this.song.loopStart && !this.enableIntro) this.bar = this.song.loopStart;
-					if (this.bar >= this.song.loopStart + this.song.loopLength && !this.enableOutro) this.bar = this.song.loopStart;
+			if (playSong) {
+				if (this.part >= this.song.partsPerBeat) {
+					this.beat++;
+					this.part = 0;
+					this.arpeggio = 0;
+					this.arpSampleCountdown = samplesPerTick;
 				}
-			}
-			if (this.bar >= this.song.barCount) {
-				if (this.enableOutro) {
-					this.bar = 0;
-					this.enableIntro = true;
-					ended = true;
-					this.pause();
-				} else {
-					this.bar = this.song.loopStart;
+				if (this.beat >= this.song.beatsPerBar) {
+					this.bar++;
+					this.beat = 0;
+					this.part = 0;
+					this.arpeggio = 0;
+					this.arpSampleCountdown = samplesPerTick;
+					
+					if (this.loopCount == -1) {
+						if (this.bar < this.song.loopStart && !this.enableIntro) this.bar = this.song.loopStart;
+						if (this.bar >= this.song.loopStart + this.song.loopLength && !this.enableOutro) this.bar = this.song.loopStart;
+					}
 				}
- 			}
-			if (this.bar >= this.song.loopStart) {
-				this.enableIntro = false;
+				if (this.bar >= this.song.barCount) {
+					if (this.enableOutro) {
+						this.bar = 0;
+						this.enableIntro = true;
+						ended = true;
+						this.pause();
+					} else {
+						this.bar = this.song.loopStart;
+					}
+				}
+				if (this.bar >= this.song.loopStart) {
+					this.enableIntro = false;
+				}
 			}
 			
  			while (true) {
@@ -378,7 +546,7 @@ declare global {
 				}
 				
 				const generatedSynthesizer: Function = Synth.getGeneratedSynthesizer(this.song, this.bar);
-				bufferIndex = generatedSynthesizer(this, this.song, dataLeft, dataRight, bufferLength, bufferIndex, samplesPerArpeggio);
+				bufferIndex = generatedSynthesizer(this, this.song, dataLeft, dataRight, bufferLength, bufferIndex, samplesPerTick);
 				
 				const finishedBuffer: boolean = (bufferIndex == -1);
 				if (finishedBuffer) {
@@ -408,9 +576,9 @@ declare global {
 				}
 			}
 			
-			this.playheadInternal = (((this.arpeggio + 1.0 - this.arpeggioSampleCountdown / samplesPerArpeggio) / 4.0 + this.part) / this.song.partsPerBeat + this.beat) / this.song.beatsPerBar + this.bar;
+			this.playheadInternal = (((this.arpeggio + 1.0 - this.arpSampleCountdown / samplesPerTick) / 4.0 + this.part) / this.song.partsPerBeat + this.beat) / this.song.beatsPerBar + this.bar;
 		}
-		
+
 		private static computeOperatorEnvelope(envelope: number, time: number, beats: number, customVolume: number): number {
 			switch(Config.operatorEnvelopeType[envelope]) {
 				case EnvelopeType.custom: return customVolume;
@@ -445,16 +613,16 @@ declare global {
 			}
 		}
 		
-		public static computeChannelInstrument(synth: Synth, song: Song, channel: number, time: number, sampleTime: number, samplesPerArpeggio: number, samples: number): void {
+		public static computeChannelInstrument(synth: Synth, song: Song, channel: number, time: number, sampleTime: number, samplesPerTick: number, samples: number): void {
 			const isDrum: boolean = song.getChannelIsDrum(channel);
 			const synthChannel: SynthChannel = synth.channels[channel];
 			const pattern: Pattern | null = song.getPattern(channel, synth.bar);
 			const instrument: Instrument = song.channels[channel].instruments[pattern == null ? 0 : pattern.instrument];
 			const pianoMode = (synth.pianoPressed && channel == synth.pianoChannel);
-			const basePitch: number = isDrum ? Config.drumBasePitches[instrument.wave] : Config.keyTransposes[song.key];
+			const basePitch: number = isDrum ? Config.drumBasePitches[instrument.wave] : Config.keys[song.key].basePitch;
 			const intervalScale: number = isDrum ? Config.drumInterval : 1;
 			const pitchDamping: number = isDrum ? (Config.drumWaveIsSoft[instrument.wave] ? 24.0 : 60.0) : 48.0;
-			const secondsPerPart: number = 4.0 * samplesPerArpeggio / synth.samplesPerSecond;
+			const secondsPerPart: number = 4.0 * samplesPerTick / synth.samplesPerSecond;
 			const beatsPerPart: number = 1.0 / song.partsPerBeat;
 			
 			synthChannel.phaseDeltaScale = 0.0;
@@ -466,7 +634,7 @@ declare global {
 			
 			let partsSinceStart: number = 0.0;
 			let arpeggio: number = synth.arpeggio;
-			let arpeggioSampleCountdown: number = synth.arpeggioSampleCountdown;
+			let arpSampleCountdown: number = synth.arpSampleCountdown;
 			
 			let pitches: number[] | null = null;
 			let resetPhases: boolean = true;
@@ -544,8 +712,8 @@ declare global {
 					let decayTimeTickStart: number = partTimeTickStart;
 					let decayTimeTickEnd:   number = partTimeTickEnd;
 					
-					const startRatio: number = 1.0 - (arpeggioSampleCountdown + samples) / samplesPerArpeggio;
-					const endRatio:   number = 1.0 - (arpeggioSampleCountdown)           / samplesPerArpeggio;
+					const startRatio: number = 1.0 - (arpSampleCountdown + samples) / samplesPerTick;
+					const endRatio:   number = 1.0 - (arpSampleCountdown)           / samplesPerTick;
 					resetPhases = (tickTimeStart + startRatio - noteStart == 0.0);
 					
 					const transition: number = instrument.transition;
@@ -1024,7 +1192,7 @@ declare global {
 				
 				//console.log(synthSource.join("\n"));
 				
-				Synth.generatedSynthesizers[fingerprint] = new Function("synth", "song", "dataLeft", "dataRight", "bufferLength", "bufferIndex", "samplesPerArpeggio", synthSource.join("\n"));
+				Synth.generatedSynthesizers[fingerprint] = new Function("synth", "song", "dataLeft", "dataRight", "bufferLength", "bufferIndex", "samplesPerTick", synthSource.join("\n"));
 			}
 			return Synth.generatedSynthesizers[fingerprint];
 		}
@@ -1059,16 +1227,16 @@ declare global {
 				
 				var samples;
 				var samplesLeftInBuffer = bufferLength - bufferIndex;
-				if (synth.arpeggioSampleCountdown <= samplesLeftInBuffer) {
-					samples = synth.arpeggioSampleCountdown;
+				if (synth.arpSampleCountdown <= samplesLeftInBuffer) {
+					samples = synth.arpSampleCountdown;
 				} else {
 					samples = samplesLeftInBuffer;
 				}
-				synth.arpeggioSampleCountdown -= samples;
+				synth.arpSampleCountdown -= samples;
 				
 				var time = synth.part + synth.beat * song.partsPerBeat;
 				
-				beepbox.Synth.computeChannelInstrument(synth, song, #, time, sampleTime, samplesPerArpeggio, samples); // ALL
+				beepbox.Synth.computeChannelInstrument(synth, song, #, time, sampleTime, samplesPerTick, samples); // ALL
 				var synthChannel# = synth.channels[#]; // ALL
 				
 				var channel#ChorusA = Math.pow(2.0, (beepbox.Config.chorusOffsets[instrument#.chorus] + beepbox.Config.chorusIntervals[instrument#.chorus] + beepbox.Config.octoffValues[instrument#.octoff] + (detune / 24) * ((riff * beepbox.Config.chorusRiffApp[instrument#.chorus]) + 1)) / 12.0); // CHIP
@@ -1251,9 +1419,9 @@ declare global {
 					synth.effectPhase = Math.PI - Math.asin(effectY);
 				}
 				
-				if (synth.arpeggioSampleCountdown == 0) {
+				if (synth.arpSampleCountdown == 0) {
 					synth.arpeggio++;
-					synth.arpeggioSampleCountdown = samplesPerArpeggio;
+					synth.arpSampleCountdown = samplesPerTick;
 					if (synth.arpeggio == 4) {
 						synth.arpeggio = 0;
 						synth.part++;

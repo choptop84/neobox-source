@@ -1,5 +1,6 @@
-    import { SongTagCode, CharCode } from "./tagCodes";
+    import { SongTagCode, CharCode, } from "./tagCodes";
     import { Config, Dictionary, InstrumentType } from "./SynthConfig";
+	//import { clamp } from "./usefulFunctions";
     
     export class BitFieldReader {
         private _bits: number[] = [];
@@ -294,6 +295,10 @@ export class Instrument {
 				this.operators[i].copy(other.operators[i]);
 			}
 		}
+
+		/*public getChord(): Chord {
+			return this.type == InstrumentType.noise ? Config.harmDisplay[2] : Config.harmDisplay[this.harm];
+		}*/
 	}
 
     export class Channel {
@@ -382,7 +387,7 @@ export class Instrument {
 		}
 
 		public getScaleNKey(): string {
-			return ' "' + Config.scaleNames[this.scale] + '" and your key is ' + Config.keyNames[this.key];
+			return ' "' + Config.scales[this.scale].name + '" and your key is ' + Config.keys[this.key].name;
 		}
 		
 		public getChannelIsDrum(channel: number): boolean {
@@ -405,7 +410,7 @@ export class Instrument {
 		public initToDefault(andResetChannels: boolean = true): void {
 			this.scale = 0;
 			this.setSongTheme = "none";
-			this.key = Config.keyNames.length - 1;
+			this.key = Config.keys.map(key=>key.name).indexOf("C");
 			this.mix = 1;
 			this.sampleRate = 2;
 			this.loopStart = 0;
@@ -780,7 +785,7 @@ export class Instrument {
 				} else if (command == SongTagCode.mix) {
 					this.mix = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
 				} else if (command == SongTagCode.key) {
-					this.key = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
+						this.key = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
 				} else if (command == SongTagCode.setSongTheme) {
 					if (fromOld) {
 						var themeIndex = base64CharCodeToInt[compressed.charCodeAt(charIndex++)];
@@ -1353,10 +1358,10 @@ export class Instrument {
 				format: Song._format,
 				version: Song._latestNepBoxVersion,
 				theme: this.setSongTheme,
-				scale: Config.scaleNames[this.scale],
+				scale: Config.scales[this.scale].name,
 				mix: Config.mixNames[this.mix],
 				sampleRate: Config.sampleRateNames[this.sampleRate],
-				key: Config.keyNames[this.key],
+				key: Config.keys[this.key].name,
 				introBars: this.loopStart,
 				loopBars: this.loopLength,
 				beatsPerBar: this.beatsPerBar,
@@ -1383,9 +1388,13 @@ export class Instrument {
 			
 			this.scale = 11; // default to expert.
 			if (jsonObject.scale != undefined) {
+				if (format == "BeepBox") {
 				const oldScaleNames: Dictionary<number> = {"romani :)": 8, "romani :(": 9};
-				const scale: number = oldScaleNames[jsonObject.scale] != undefined ? oldScaleNames[jsonObject.scale] : Config.scaleNames.indexOf(jsonObject.scale);
+				const scale: number = oldScaleNames[jsonObject.scale] != undefined ? oldScaleNames[jsonObject.scale] : Config.scales.map(scale=>scale.name).indexOf(jsonObject.scale);
 				if (scale != -1) this.scale = scale;
+				} else {
+					this.scale = jsonObject["scale"];
+				}
 			}
 
 			if (jsonObject.theme != undefined) {
@@ -1417,7 +1426,7 @@ export class Instrument {
 			
 			if (jsonObject.key != undefined) {
 				if (typeof(jsonObject.key) == "number") {
-					this.key = Config.keyNames.length - 1 - (((jsonObject.key + 1200) >>> 0) % Config.keyNames.length);
+					this.key = Config.oldKeys.length - 1 - (((jsonObject.key + 1200) >>> 0) % Config.oldKeys.length);
 				} else if (typeof(jsonObject.key) == "string") {
 					const key: string = jsonObject.key;
 					const letter: string = key.charAt(0).toUpperCase();

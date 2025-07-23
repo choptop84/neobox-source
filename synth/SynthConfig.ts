@@ -52,89 +52,112 @@ export const enum InstrumentType {
 	pwm = 3,
 }
 
+export interface Scale extends BeepBoxOption {
+	readonly flags: ReadonlyArray<boolean>;
+	readonly realName: string;
+}
+
+export interface Key extends BeepBoxOption {
+	readonly isWhiteKey: boolean;
+	readonly basePitch: number;
+}
+
 export class Config {
-	public static readonly scaleNames: ReadonlyArray<string> = ["easy :)", "easy :(", "island :)", "island :(", "blues :)", "blues :(", "normal :)", "normal :(", "dbl harmonic :)", "dbl harmonic :(", "enigma", "expert", "monotonic", "no dabbing"];
-	public static readonly scaleFlags: ReadonlyArray<ReadonlyArray<boolean>> = [
-		[ true, false,  true, false,  true, false, false,  true, false,  true, false, false],
-		[ true, false, false,  true, false,  true, false,  true, false, false,  true, false],
-		[ true, false, false, false,  true,  true, false,  true, false, false, false,  true],
-		[ true,  true, false,  true, false, false, false,  true,  true, false, false, false],
-		[ true, false,  true,  true,  true, false, false,  true, false,  true, false, false],
-		[ true, false, false,  true, false,  true,  true,  true, false, false,  true, false],
-		[ true, false,  true, false,  true,  true, false,  true, false,  true, false,  true],
-		[ true, false,  true,  true, false,  true, false,  true,  true, false,  true, false],
-		[ true,  true, false, false,  true,  true, false,  true,  true, false, false,  true],
-		[ true, false,  true,  true, false, false,  true,  true,  true, false, false,  true],
-		[ true, false,  true, false,  true, false,  true, false,  true, false,  true, false],
-		[ true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true],
-		[ true, false, false, false, false, false, false, false, false, false, false, false],
-		[ true,  true, false,  true,  true,  true,  true,  true,  true, false,  true, false],
-	];
-	public static readonly pianoScaleFlags: ReadonlyArray<boolean> = [ true, false,  true, false,  true,  true, false,  true, false,  true, false,  true];
-	public static readonly blackKeyNameParents: ReadonlyArray<number> = [-1, 1, -1, 1, -1, 1, -1, -1, 1, -1, 1, -1];
-	public static readonly pitchNames: ReadonlyArray<string | null> = ["C", null, "D", null, "E", "F", null, "G", null, "A", null, "B"];
-	public static readonly keyNames: ReadonlyArray<string> = ["B", "A♯", "A", "G♯", "G", "F♯", "F", "E", "D♯", "D", "C♯", "C"];
-	// C1 has index 24 on the MIDI scale. C8 is 108, and C9 is 120. C10 is barely in the audible range.
-	public static readonly keyTransposes: ReadonlyArray<number> = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
-	public static readonly mixNames: ReadonlyArray<string> = ["Type A (B & S)", "Type B (M)", "Type C"];
-	public static readonly sampleRateNames: ReadonlyArray<string> = ["44100kHz", "48000kHz", "default", "×4", "×2", "÷2", "÷4", "÷8", "÷16"];
-	public static readonly tempoSteps: number = 24;
-	public static readonly reverbRange: number = 5;
-	public static readonly blendRange: number = 4;
-	public static readonly riffRange: number = 11;
-	public static readonly detuneRange: number = 24;
-	public static readonly muffRange: number = 24;
-	public static readonly beatsPerBarMin: number = 1;
-	public static readonly beatsPerBarMax: number = 24;
-	public static readonly barCountMin: number = 1;
-	public static readonly barCountMax: number = 256;
-	public static readonly patternsPerChannelMin: number = 1;
-	public static readonly patternsPerChannelMax: number = 64;
-	public static readonly instrumentsPerChannelMin: number = 1;
-	public static readonly instrumentsPerChannelMax: number = 64;
-	public static readonly partNames: ReadonlyArray<string> = ["÷3 (triplets)", "÷4 (standard)", "÷6", "÷8", "÷16 (arpfest)", "÷12", "÷9", "÷5", "÷50", "÷24"];
-	public static readonly partCounts: ReadonlyArray<number> = [3, 4, 6, 8, 16, 12, 9, 5, 50, 24];
-	public static readonly waveNames: ReadonlyArray<string> = ["triangle", "square", "pulse wide", "pulse narrow", "sawtooth", "double saw", "double pulse", "spiky", "plateau", "glitch", "10% pulse", "sunsoft bass", "loud pulse", "sax", "guitar", "sine", "atari bass", "atari pulse", "1% pulse", "curved sawtooth", "viola", "brass", "acoustic bass", "lyre", "ramp pulse", "piccolo", "squaretooth", "flatline", "pnryshk a (u5)", "pnryshk b (riff)"];
-	public static readonly waveVolumes: ReadonlyArray<number> = [1.0,        0.5,      0.5,          0.5,            0.65,       0.5,          0.4,            0.4,     0.94,      0.5,      0.5,         1.0,            0.6,          0.1,   0.25,     1.0,    1.0,          1.0,           1.0,        1.0,               1.0,     1.0,     1.0,             0.2,    0.2,          0.9,       0.9,           1.0,        0.4,                 0.5];
-	public static readonly drumNames: ReadonlyArray<string> = ["retro", "white", "periodic", "detuned periodic", "shine", "hollow", "deep", "cutter", "metallic", "snare"/*, "tom-tom", "cymbal", "bass"*/];
-	public static readonly drumVolumes: ReadonlyArray<number> = [0.25, 1.0, 0.4, 0.3, 0.3, 1.5, 1.5, 0.25, 1.0, 1.0/*, 1.5, 1.5, 1.5*/];
-	public static readonly drumBasePitches: ReadonlyArray<number> = [69, 69, 69, 69, 69, 96, 120, 96, 96, 69/*, 96, 90, 126*/];
-	public static readonly drumPitchFilterMult: ReadonlyArray<number> = [100.0, 8.0, 100.0, 100.0, 100.0, 1.0, 100.0, 100.0, 100.0, 100.0/*, 1.0, 1.0, 1.0*/];
-	public static readonly drumWaveIsSoft: ReadonlyArray<boolean> = [false, true, false, false, false, true, true, false, false, false/*, true, true, true*/];
+	public static readonly scales: DictionaryArray<Scale> = toNameMap([
+		{name: "easy :)",            realName: "pentatonic major",      flags: [true, false,  true, false,  true, false, false,  true, false,  true, false, false]},
+		{name: "easy :(",            realName: "pentatonic minor",      flags: [true, false, false,  true, false,  true, false,  true, false, false,  true, false]},
+		{name: "island :)",          realName: "ryukyu",                flags: [true, false, false, false,  true,  true, false,  true, false, false, false,  true]},
+		{name: "island :(",          realName: "pelog selisir",         flags: [true,  true, false,  true, false, false, false,  true,  true, false, false, false]},
+		{name: "blues :)",           realName: "blues major",           flags: [true, false,  true,  true,  true, false, false,  true, false,  true, false, false]},
+		{name: "blues :(",           realName: "blues",                 flags: [true, false, false,  true, false,  true,  true,  true, false, false,  true, false]},
+		{name: "normal :)",          realName: "ionian",                flags: [true, false,  true, false,  true,  true, false,  true, false,  true, false,  true]},
+		{name: "normal :(",          realName: "aeolian",               flags: [true, false,  true,  true, false,  true, false,  true,  true, false,  true, false]},
+		{name: "dbl harmonic :)", 	 realName: "double harmonic major", flags: [true,  true, false, false,  true,  true, false,  true,  true, false, false,  true]},
+		{name: "dbl harmonic :(",    realName: "double harmonic minor", flags: [true, false,  true,  true, false, false,  true,  true,  true, false, false,  true]},
+		{name: "enigma",             realName: "whole tone",            flags: [true, false,  true, false,  true, false,  true, false,  true, false,  true, false]},
+		{name: "expert",             realName: "chromatic",             flags: [true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true]},
+		{name: "monotonic",          realName: "monotonic",             flags: [true, false, false, false, false, false, false, false, false, false, false, false]},
+		{name: "no dabbing",         realName: "no dabbing",            flags: [true,  true, false,  true,  true,  true,  true,  true,  true, false,  true, false]},
+	]);
+	static readonly blackKeyNameParents: ReadonlyArray<number> = [-1, 1, -1, 1, -1, 1, -1, -1, 1, -1, 1, -1];
+	static readonly pitchNames: ReadonlyArray<string | null> = ["C", null, "D", null, "E", "F", null, "G", null, "A", null, "B"];
+	public static readonly oldKeys: ReadonlyArray<string | null> = ["B", "A♯", "A", "G♯", "F♯", "F", "E", "D♯", "D", "C♯", "C"];
+	public static readonly keys: DictionaryArray<Key> = toNameMap([
+		{name: "C",  isWhiteKey:  true, basePitch: 12}, // C0 has index 12 on the MIDI scale. C7 is 96, and C9 is 120. C10 is barely in the audible range.
+		{name: "C♯", isWhiteKey: false, basePitch: 13},
+		{name: "D",  isWhiteKey:  true, basePitch: 14},
+		{name: "D♯", isWhiteKey: false, basePitch: 15},
+		{name: "E",  isWhiteKey:  true, basePitch: 16},
+		{name: "F",  isWhiteKey:  true, basePitch: 17},
+		{name: "F♯", isWhiteKey: false, basePitch: 18},
+		{name: "G",  isWhiteKey:  true, basePitch: 19},
+		{name: "G♯", isWhiteKey: false, basePitch: 20},
+		{name: "A",  isWhiteKey:  true, basePitch: 21},
+		{name: "A♯", isWhiteKey: false, basePitch: 22},
+		{name: "B",  isWhiteKey:  true, basePitch: 23},
+	]);
+	static readonly mixNames: ReadonlyArray<string> = ["Type A (B & S)", "Type B (M)", "Type C"];
+	static readonly sampleRateNames: ReadonlyArray<string> = ["44100kHz", "48000kHz", "default", "×4", "×2", "÷2", "÷4", "÷8", "÷16"];
+	static readonly tempoSteps: number = 24;
+	static readonly reverbRange: number = 5;
+	static readonly blendRange: number = 4;
+	static readonly riffRange: number = 11;
+	static readonly detuneRange: number = 24;
+	static readonly muffRange: number = 24;
+	static readonly beatsPerBarMin: number = 1;
+	static readonly beatsPerBarMax: number = 24;
+	static readonly barCountMin: number = 1;
+	static readonly barCountMax: number = 256;
+	static readonly patternsPerChannelMin: number = 1;
+	static readonly patternsPerChannelMax: number = 64;
+	static readonly instrumentsPerChannelMin: number = 1;
+	static readonly instrumentsPerChannelMax: number = 64;
+	static readonly pitchesPerOctave: number = 12; // TODO: Use this for converting pitch to frequency.
+	static readonly drumCount: number = 12;
+	static readonly pitchOctaves: number = 7;
+	static readonly partNames: ReadonlyArray<string> = ["÷3 (triplets)", "÷4 (standard)", "÷6", "÷8", "÷16 (arpfest)", "÷12", "÷9", "÷5", "÷50", "÷24"];
+	static readonly partCounts: ReadonlyArray<number> = [3, 4, 6, 8, 16, 12, 9, 5, 50, 24];
+	static readonly waveNames: ReadonlyArray<string> = ["triangle", "square", "pulse wide", "pulse narrow", "sawtooth", "double saw", "double pulse", "spiky", "plateau", "glitch", "10% pulse", "sunsoft bass", "loud pulse", "sax", "guitar", "sine", "atari bass", "atari pulse", "1% pulse", "curved sawtooth", "viola", "brass", "acoustic bass", "lyre", "ramp pulse", "piccolo", "squaretooth", "flatline", "pnryshk a (u5)", "pnryshk b (riff)"];
+	static readonly waveVolumes: ReadonlyArray<number> = [1.0,        0.5,      0.5,          0.5,            0.65,       0.5,          0.4,            0.4,     0.94,      0.5,      0.5,         1.0,            0.6,          0.1,   0.25,     1.0,    1.0,          1.0,           1.0,        1.0,               1.0,     1.0,     1.0,             0.2,    0.2,          0.9,       0.9,           1.0,        0.4,                 0.5];
+	static readonly drumNames: ReadonlyArray<string> = ["retro", "white", "periodic", "detuned periodic", "shine", "hollow", "deep", "cutter", "metallic", "snare"/*, "tom-tom", "cymbal", "bass"*/];
+	static readonly drumVolumes: ReadonlyArray<number> = [0.25, 1.0, 0.4, 0.3, 0.3, 1.5, 1.5, 0.25, 1.0, 1.0/*, 1.5, 1.5, 1.5*/];
+	static readonly drumBasePitches: ReadonlyArray<number> = [69, 69, 69, 69, 69, 96, 120, 96, 96, 69/*, 96, 90, 126*/];
+	static readonly drumPitchFilterMult: ReadonlyArray<number> = [100.0, 8.0, 100.0, 100.0, 100.0, 1.0, 100.0, 100.0, 100.0, 100.0/*, 1.0, 1.0, 1.0*/];
+	static readonly drumWaveIsSoft: ReadonlyArray<boolean> = [false, true, false, false, false, true, true, false, false, false/*, true, true, true*/];
 	// Noise waves have too many samples to write by hand, they're generated on-demand by getDrumWave instead.
 	private static readonly _drumWaves: Array<Float32Array | null> = [null, null, null, null, null, null, null, null, null, null/*, null, null, null*/];
-	public static readonly pwmwaveNames: ReadonlyArray<string> = ["5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%"];
-	public static readonly pwmwaveVolumes: ReadonlyArray<number> = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-	public static readonly filterNames: ReadonlyArray<string> = ["none", "sustain sharp", "sustain medium", "sustain soft", "decay sharp", "decay medium", "decay soft", "decay drawn", "fade sharp", "fade medium", "fade soft", "ring", "muffled", "submerged", "shift", "overtone", "woosh", "undertone"];
-	public static readonly filterBases: ReadonlyArray<number> = [0.0, 2.0, 3.5, 5.0, 1.0, 2.5, 4.0, 1.0, 5.0, 7.5, 10.0, -1.0, 4.0, 6.0, 0.0, 1.0, 2.0, 5.0];
-	public static readonly filterDecays: ReadonlyArray<number> = [0.0, 0.0, 0.0, 0.0, 10.0, 7.0, 4.0, 0.5, -10.0, -7.0, -4.0, 0.2, 0.2, 0.3, 0.0, 0.0, -6.0, 0.0];
-	public static readonly filterVolumes: ReadonlyArray<number> = [0.2, 0.4, 0.7, 1.0, 0.5, 0.75, 1.0, 0.5, 0.4, 0.7, 1.0, 0.5, 0.75, 0.4, 0.4, 1.0, 0.5, 1.75];
-	public static readonly transitionNames: ReadonlyArray<string> = ["seamless", "sudden", "smooth", "slide", "trill", "click", "bow", "blip"];
-	public static readonly effectNames: ReadonlyArray<string> = ["none", "vibrato light", "vibrato delayed", "vibrato heavy", "tremolo light", "tremolo heavy", "alien", "stutter", "strum"];
-	public static readonly effectVibratos: ReadonlyArray<number> = [0.0, 0.15, 0.3, 0.45, 0.0, 0.0, 1.0, 0.0, 0.05];
-	public static readonly effectTremolos: ReadonlyArray<number> = [0.0, 0.0, 0.0, 0.0, 0.25, 0.5, 0.0, 1.0, 0.025];
-	public static readonly effectVibratoDelays: ReadonlyArray<number> = [0, 0, 3, 0, 0, 0, 0, 0];
-	public static readonly chorusNames: ReadonlyArray<string> = ["union", "shimmer", "hum", "honky tonk", "dissonant", "fifths", "octaves", "spinner", "detune", "bowed", "rising", "vibrate", "fourths", "bass", "dirty", "stationary", "harmonic (legacy)", "recurve", "voiced", "fluctuate"];
-	public static readonly chorusIntervals: ReadonlyArray<number> = [0.0, 0.02, 0.05, 0.1, 0.25, 3.5, 6, 0.02, 0.0, 0.02, 1.0, 3.5, 4, 0, 0.0, 3.5, 0.0, 0.005, 0.25, 12];
-	public static readonly chorusOffsets: ReadonlyArray<number> = [0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 6, 0.0, 0.25, 0.0, 0.7, 7, 4, -7, 0.1, 0.0, 0.0, 0.0, 3.0, 0.0];
-	public static readonly chorusVolumes: ReadonlyArray<number> = [0.9, 0.9, 1.0, 1.0, 0.95, 0.95, 0.9, 1.0, 1.0, 1.0, 0.95, 0.975, 0.95, 1.0, 0.975, 0.9, 1.0, 1.0, 0.9, 1.0];
-	public static readonly chorusSigns: ReadonlyArray<number> = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0];
-	public static readonly chorusRiffApp: ReadonlyArray<number> = [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-	public static readonly chorusHarmonizes: ReadonlyArray<boolean> = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false];
-	public static readonly harmDisplay: ReadonlyArray<string> = ["arpeggio", "duet", "chord", "seventh", "half arpeggio", "arp-chord"];
-	public static readonly harmNames: ReadonlyArray<number> = [0, 1, 2, 3, 4, 5];
-	public static readonly fmChorusDisplay: ReadonlyArray<string> = ["none", "default", "detune", "honky tonk", "consecutive", "alt. major thirds", "alt. minor thirds", "fifths", "octaves"];
-	public static readonly fmChorusNames: ReadonlyArray<number> = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-	public static readonly imuteNames: ReadonlyArray<string> = ["◉", "◎"];
-	public static readonly imuteValues: ReadonlyArray<number> = [1, 0];
-	public static readonly octoffNames: ReadonlyArray<string> = ["none", "+2 (2 octaves)",  "+1 1/2 (octave and fifth)",  "+1 (octave)",  "+1/2 (fifth)", "-1/2 (fifth)", "-1 (octave)", "-1 1/2 (octave and fifth)", "-2 (2 octaves"];
-	public static readonly octoffValues: ReadonlyArray<number> = [0.0, 24.0, 19.0, 12.0, 7.0, -7.0, -12.0, -19.0, -24.0];
-	public static readonly volumeNames: ReadonlyArray<string> = ["loudest", "loud", "medium", "quiet", "quietest", "mute", "i", "couldnt", "be", "bothered"];
-	public static readonly volumeValues: ReadonlyArray<number> = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, -1.0];
-	public static readonly volumeMValues: ReadonlyArray<number> = [0.0, 0.5, 1.0, 1.5, 2.0, -1.0];
-	public static readonly ipanValues: ReadonlyArray<number> = [-1.0, -0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1.0];
-	public static readonly operatorCount: number = 4;
-	public static readonly operatorAlgorithmNames: ReadonlyArray<string> = [
+	static readonly pwmwaveNames: ReadonlyArray<string> = ["5%", "10%", "15%", "20%", "25%", "30%", "35%", "40%", "45%", "50%"];
+	static readonly pwmwaveVolumes: ReadonlyArray<number> = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+	static readonly filterNames: ReadonlyArray<string> = ["none", "sustain sharp", "sustain medium", "sustain soft", "decay sharp", "decay medium", "decay soft", "decay drawn", "fade sharp", "fade medium", "fade soft", "ring", "muffled", "submerged", "shift", "overtone", "woosh", "undertone"];
+	static readonly filterBases: ReadonlyArray<number> = [0.0, 2.0, 3.5, 5.0, 1.0, 2.5, 4.0, 1.0, 5.0, 7.5, 10.0, -1.0, 4.0, 6.0, 0.0, 1.0, 2.0, 5.0];
+	static readonly filterDecays: ReadonlyArray<number> = [0.0, 0.0, 0.0, 0.0, 10.0, 7.0, 4.0, 0.5, -10.0, -7.0, -4.0, 0.2, 0.2, 0.3, 0.0, 0.0, -6.0, 0.0];
+	static readonly filterVolumes: ReadonlyArray<number> = [0.2, 0.4, 0.7, 1.0, 0.5, 0.75, 1.0, 0.5, 0.4, 0.7, 1.0, 0.5, 0.75, 0.4, 0.4, 1.0, 0.5, 1.75];
+	static readonly transitionNames: ReadonlyArray<string> = ["seamless", "sudden", "smooth", "slide", "trill", "click", "bow", "blip"];
+	static readonly effectNames: ReadonlyArray<string> = ["none", "vibrato light", "vibrato delayed", "vibrato heavy", "tremolo light", "tremolo heavy", "alien", "stutter", "strum"];
+	static readonly effectVibratos: ReadonlyArray<number> = [0.0, 0.15, 0.3, 0.45, 0.0, 0.0, 1.0, 0.0, 0.05];
+	static readonly effectTremolos: ReadonlyArray<number> = [0.0, 0.0, 0.0, 0.0, 0.25, 0.5, 0.0, 1.0, 0.025];
+	static readonly effectVibratoDelays: ReadonlyArray<number> = [0, 0, 3, 0, 0, 0, 0, 0];
+	static readonly chorusNames: ReadonlyArray<string> = ["union", "shimmer", "hum", "honky tonk", "dissonant", "fifths", "octaves", "spinner", "detune", "bowed", "rising", "vibrate", "fourths", "bass", "dirty", "stationary", "harmonic (legacy)", "recurve", "voiced", "fluctuate"];
+	static readonly chorusIntervals: ReadonlyArray<number> = [0.0, 0.02, 0.05, 0.1, 0.25, 3.5, 6, 0.02, 0.0, 0.02, 1.0, 3.5, 4, 0, 0.0, 3.5, 0.0, 0.005, 0.25, 12];
+	static readonly chorusOffsets: ReadonlyArray<number> = [0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 6, 0.0, 0.25, 0.0, 0.7, 7, 4, -7, 0.1, 0.0, 0.0, 0.0, 3.0, 0.0];
+	static readonly chorusVolumes: ReadonlyArray<number> = [0.9, 0.9, 1.0, 1.0, 0.95, 0.95, 0.9, 1.0, 1.0, 1.0, 0.95, 0.975, 0.95, 1.0, 0.975, 0.9, 1.0, 1.0, 0.9, 1.0];
+	static readonly chorusSigns: ReadonlyArray<number> = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, -1.0, 1.0, 1.0];
+	static readonly chorusRiffApp: ReadonlyArray<number> = [0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+	static readonly chorusHarmonizes: ReadonlyArray<boolean> = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false];
+	static readonly harmDisplay: ReadonlyArray<string> = ["arpeggio", "duet", "chord", "seventh", "half arpeggio", "arp-chord"];
+	static readonly harmNames: ReadonlyArray<number> = [0, 1, 2, 3, 4, 5];
+	static readonly fmChorusDisplay: ReadonlyArray<string> = ["none", "default", "detune", "honky tonk", "consecutive", "alt. major thirds", "alt. minor thirds", "fifths", "octaves"];
+	static readonly fmChorusNames: ReadonlyArray<number> = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+	static readonly imuteNames: ReadonlyArray<string> = ["◉", "◎"];
+	static readonly imuteValues: ReadonlyArray<number> = [1, 0];
+	static readonly octoffNames: ReadonlyArray<string> = ["none", "+2 (2 octaves)",  "+1 1/2 (octave and fifth)",  "+1 (octave)",  "+1/2 (fifth)", "-1/2 (fifth)", "-1 (octave)", "-1 1/2 (octave and fifth)", "-2 (2 octaves"];
+	static readonly octoffValues: ReadonlyArray<number> = [0.0, 24.0, 19.0, 12.0, 7.0, -7.0, -12.0, -19.0, -24.0];
+	static readonly volumeNames: ReadonlyArray<string> = ["loudest", "loud", "medium", "quiet", "quietest", "mute", "i", "couldnt", "be", "bothered"];
+	static readonly volumeValues: ReadonlyArray<number> = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, -1.0];
+	static readonly volumeMValues: ReadonlyArray<number> = [0.0, 0.5, 1.0, 1.5, 2.0, -1.0];
+	static readonly ipanValues: ReadonlyArray<number> = [-1.0, -0.75, -0.5, -0.25, 0.0, 0.25, 0.5, 0.75, 1.0];
+	static readonly operatorCount: number = 4;
+	static readonly operatorAlgorithmNames: ReadonlyArray<string> = [
 		"1←(2 3 4)",
 		"1←(2 3←4)",
 		"1←2←(3 4)",
@@ -149,8 +172,8 @@ export class Config {
 		"(1 2 3)←4",
 		"1 2 3 4",
 	];
-	public static readonly midiAlgorithmNames: ReadonlyArray<string> = ["1<(2 3 4)", "1<(2 3<4)", "1<2<(3 4)", "1<(2 3)<4", "1<2<3<4", "1<3 2<4", "1 2<(3 4)", "1 2<3<4", "(1 2)<3<4", "(1 2)<(3 4)", "1 2 3<4", "(1 2 3)<4", "1 2 3 4"];
-	public static readonly operatorModulatedBy: ReadonlyArray<ReadonlyArray<ReadonlyArray<number>>> = [
+	static readonly midiAlgorithmNames: ReadonlyArray<string> = ["1<(2 3 4)", "1<(2 3<4)", "1<2<(3 4)", "1<(2 3)<4", "1<2<3<4", "1<3 2<4", "1 2<(3 4)", "1 2<3<4", "(1 2)<3<4", "(1 2)<(3 4)", "1 2 3<4", "(1 2 3)<4", "1 2 3 4"];
+	static readonly operatorModulatedBy: ReadonlyArray<ReadonlyArray<ReadonlyArray<number>>> = [
 		[[2, 3, 4], [],     [],  []],
 		[[2, 3],    [],     [4], []],
 		[[2],       [3, 4], [],  []],
@@ -165,7 +188,7 @@ export class Config {
 		[[4],       [4],    [4], []],
 		[[],        [],     [],  []],
 	];
-	public static readonly operatorAssociatedCarrier: ReadonlyArray<ReadonlyArray<number>> = [
+	static readonly operatorAssociatedCarrier: ReadonlyArray<ReadonlyArray<number>> = [
 		[1, 1, 1, 1],
 		[1, 1, 1, 1],
 		[1, 1, 1, 1],
@@ -180,8 +203,8 @@ export class Config {
 		[1, 2, 3, 3],
 		[1, 2, 3, 4],
 	];
-	public static readonly operatorCarrierCounts: ReadonlyArray<number> = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 4];
-	public static readonly operatorCarrierChorus: ReadonlyArray<ReadonlyArray<number>> = [
+	static readonly operatorCarrierCounts: ReadonlyArray<number> = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 4];
+	static readonly operatorCarrierChorus: ReadonlyArray<ReadonlyArray<number>> = [
 		[0.0, 0.0, 0.0, 0.0],
 		[0.0, 0.04, -0.073, 0.091],
 		[0.5, 0.54, 0.427, 0.591],
@@ -192,18 +215,18 @@ export class Config {
 		[0.0, 7.0, 14.0, 21.0],
 		[0.0, 12.0, 24.0, 36.0],
 	];
-	public static readonly operatorAmplitudeMax: number = 15;
-	public static readonly operatorFrequencyNames: ReadonlyArray<string> = ["1×", "~1×", "2×", "~2×", "3×", "4×", "5×", "6×", "7×", "8×", "9×", "10×", "11×", "13×", "16×", "20×"];
-	public static readonly midiFrequencyNames: ReadonlyArray<string> = ["1x", "~1x", "2x", "~2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x", "11x", "13x", "16x", "20x"];
-	public static readonly operatorFrequencies: ReadonlyArray<number> =    [1.0, 1.0, 2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 13.0, 16.0, 20.0];
-	public static readonly operatorHzOffsets: ReadonlyArray<number> =      [0.0, 1.5, 0.0, -1.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-	public static readonly operatorAmplitudeSigns: ReadonlyArray<number> = [1.0, -1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-	public static readonly operatorEnvelopeNames: ReadonlyArray<string> = ["custom", "steady", "punch", "flare 1", "flare 2", "flare 3", "pluck 1", "pluck 2", "pluck 3", "swell 1", "swell 2", "swell 3", "tremolo1", "tremolo2", "tremolo3", "custom flare", "custom tremolo", "flute 1", "flute 2", "flute 3"];
-	public static readonly operatorEnvelopeType: ReadonlyArray<EnvelopeType> = [EnvelopeType.custom, EnvelopeType.steady, EnvelopeType.punch, EnvelopeType.flare, EnvelopeType.flare, EnvelopeType.flare, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.tremolo, EnvelopeType.tremolo, EnvelopeType.tremolo, EnvelopeType.flare, EnvelopeType.tremolo, EnvelopeType.flute, EnvelopeType.flute, EnvelopeType.flute];
-	public static readonly operatorSpecialCustomVolume: ReadonlyArray<boolean> = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, false];
-	public static readonly operatorEnvelopeSpeed: ReadonlyArray<number> = [0.0, 0.0, 0.0, 32.0, 8.0, 2.0, 32.0, 8.0, 2.0, 32.0, 8.0, 2.0, 4.0, 2.0, 1.0, 8.0, 0.0, 16.0, 8.0, 4.0];
-	public static readonly operatorEnvelopeInverted: ReadonlyArray<boolean> = [false, false, false, false, false, false, false, false, false, true, true, true, false, false, false, false, false, false, false, false];
-	public static readonly operatorFeedbackNames: ReadonlyArray<string> = [
+	static readonly operatorAmplitudeMax: number = 15;
+	static readonly operatorFrequencyNames: ReadonlyArray<string> = ["1×", "~1×", "2×", "~2×", "3×", "4×", "5×", "6×", "7×", "8×", "9×", "10×", "11×", "13×", "16×", "20×"];
+	static readonly midiFrequencyNames: ReadonlyArray<string> = ["1x", "~1x", "2x", "~2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x", "11x", "13x", "16x", "20x"];
+	static readonly operatorFrequencies: ReadonlyArray<number> =    [1.0, 1.0, 2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 13.0, 16.0, 20.0];
+	static readonly operatorHzOffsets: ReadonlyArray<number> =      [0.0, 1.5, 0.0, -1.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+	static readonly operatorAmplitudeSigns: ReadonlyArray<number> = [1.0, -1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+	static readonly operatorEnvelopeNames: ReadonlyArray<string> = ["custom", "steady", "punch", "flare 1", "flare 2", "flare 3", "pluck 1", "pluck 2", "pluck 3", "swell 1", "swell 2", "swell 3", "tremolo1", "tremolo2", "tremolo3", "custom flare", "custom tremolo", "flute 1", "flute 2", "flute 3"];
+	static readonly operatorEnvelopeType: ReadonlyArray<EnvelopeType> = [EnvelopeType.custom, EnvelopeType.steady, EnvelopeType.punch, EnvelopeType.flare, EnvelopeType.flare, EnvelopeType.flare, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.pluck, EnvelopeType.tremolo, EnvelopeType.tremolo, EnvelopeType.tremolo, EnvelopeType.flare, EnvelopeType.tremolo, EnvelopeType.flute, EnvelopeType.flute, EnvelopeType.flute];
+	static readonly operatorSpecialCustomVolume: ReadonlyArray<boolean> = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, false, false, false];
+	static readonly operatorEnvelopeSpeed: ReadonlyArray<number> = [0.0, 0.0, 0.0, 32.0, 8.0, 2.0, 32.0, 8.0, 2.0, 32.0, 8.0, 2.0, 4.0, 2.0, 1.0, 8.0, 0.0, 16.0, 8.0, 4.0];
+	static readonly operatorEnvelopeInverted: ReadonlyArray<boolean> = [false, false, false, false, false, false, false, false, false, true, true, true, false, false, false, false, false, false, false, false];
+	static readonly operatorFeedbackNames: ReadonlyArray<string> = [
 		"1⟲",
 		"2⟲",
 		"3⟲",
@@ -229,7 +252,7 @@ export class Config {
 		"2🗘4",
 		"3🗘4",
 	];
-	public static readonly midiFeedbackNames: ReadonlyArray<string> = [
+	static readonly midiFeedbackNames: ReadonlyArray<string> = [
 		"1",
 		"2",
 		"3",
@@ -255,7 +278,7 @@ export class Config {
 		"2-4",
 		"3-4",
 	];
-	public static readonly operatorFeedbackIndices: ReadonlyArray<ReadonlyArray<ReadonlyArray<number>>> = [
+	static readonly operatorFeedbackIndices: ReadonlyArray<ReadonlyArray<ReadonlyArray<number>>> = [
 		[[1], [], [], []],
 		[[], [2], [], []],
 		[[], [], [3], []],
@@ -281,59 +304,59 @@ export class Config {
 		[[],  [4], [],  [2] ],
 		[[],  [],  [4], [3] ],
 	];
-	public static readonly pitchChannelTypeNames: ReadonlyArray<string> = ["chip", "FM (expert)", "PWM (beta)"];
-	public static readonly pitchChannelTypeValues: ReadonlyArray<number> = [InstrumentType.chip, InstrumentType.fm, InstrumentType.pwm];
-	public static readonly drumChannelTypeNames: ReadonlyArray<string> = ["noise"];
-	public static readonly instrumentTypeNames: ReadonlyArray<string> = ["chip", "FM", "noise", "PWM"];
+	static readonly pitchChannelTypeNames: ReadonlyArray<string> = ["chip", "FM (expert)", "PWM (beta)"];
+	static readonly pitchChannelTypeValues: ReadonlyArray<number> = [InstrumentType.chip, InstrumentType.fm, InstrumentType.pwm];
+	static readonly drumChannelTypeNames: ReadonlyArray<string> = ["noise"];
+	static readonly instrumentTypeNames: ReadonlyArray<string> = ["chip", "FM", "noise", "PWM"];
 
-	public static readonly oldThemeNames: ReadonlyArray<string> = ["Default", "ModBox 2.0", "Artic", "Cinnamon Roll [!]", "Ocean", "Rainbow [!]", "Float [!]", "Windows", "Grassland", "Dessert", "Kahootiest", "Beam to the Bit [!]", "Pretty Egg", "Poniryoshka", "Gameboy [!]", "Woodkid", "Midnight", "Snedbox", "unnamed", "Piano [!] [↻]", "Halloween", "FrozenOver❄️"];
+	static readonly oldThemeNames: ReadonlyArray<string> = ["Default", "ModBox 2.0", "Artic", "Cinnamon Roll [!]", "Ocean", "Rainbow [!]", "Float [!]", "Windows", "Grassland", "Dessert", "Kahootiest", "Beam to the Bit [!]", "Pretty Egg", "Poniryoshka", "Gameboy [!]", "Woodkid", "Midnight", "Snedbox", "unnamed", "Piano [!] [↻]", "Halloween", "FrozenOver❄️"];
 
-	public static readonly channelOneBrightColorPallet: string      = "#25f3ff";
-	public static readonly channelTwoBrightColorPallet: string      = "#44ff44";
-	public static readonly channelThreeBrightColorPallet: string    = "#ffff25";
-	public static readonly channelFourBrightColorPallet: string     = "#ff9752";
-	public static readonly channelFiveBrightColorPallet: string     = "#ff90ff";
-	public static readonly channelSixBrightColorPallet: string      = "#9f31ea";
-	public static readonly channelSevenBrightColorPallet: string    = "#2b6aff";
-	public static readonly channelEightBrightColorPallet: string    = "#00ff9f";
-	public static readonly channelNineBrightColorPallet: string     = "#ffbf00";
-	public static readonly channelTenBrightColorPallet: string      = "#d85d00";
-	public static readonly channelElevenBrightColorPallet: string   = "#ff00a1";
-	public static readonly channelTwelveBrightColorPallet: string   = "#c26afc";
-	public static readonly channelThirteenBrightColorPallet: string = "#ff1616";
-	public static readonly channelFourteenBrightColorPallet: string = "#ffffff";
-	public static readonly channelFifteenBrightColorPallet: string  = "#768dfc";
-	public static readonly channelSixteenBrightColorPallet: string  = "#a5ff00";
+	static readonly channelOneBrightColorPallet: string      = "#25f3ff";
+	static readonly channelTwoBrightColorPallet: string      = "#44ff44";
+	static readonly channelThreeBrightColorPallet: string    = "#ffff25";
+	static readonly channelFourBrightColorPallet: string     = "#ff9752";
+	static readonly channelFiveBrightColorPallet: string     = "#ff90ff";
+	static readonly channelSixBrightColorPallet: string      = "#9f31ea";
+	static readonly channelSevenBrightColorPallet: string    = "#2b6aff";
+	static readonly channelEightBrightColorPallet: string    = "#00ff9f";
+	static readonly channelNineBrightColorPallet: string     = "#ffbf00";
+	static readonly channelTenBrightColorPallet: string      = "#d85d00";
+	static readonly channelElevenBrightColorPallet: string   = "#ff00a1";
+	static readonly channelTwelveBrightColorPallet: string   = "#c26afc";
+	static readonly channelThirteenBrightColorPallet: string = "#ff1616";
+	static readonly channelFourteenBrightColorPallet: string = "#ffffff";
+	static readonly channelFifteenBrightColorPallet: string  = "#768dfc";
+	static readonly channelSixteenBrightColorPallet: string  = "#a5ff00";
 
-	public static readonly channelOneDimColorPallet: string      = "#0099a1";
-	public static readonly channelTwoDimColorPallet: string      = "#439143";
-	public static readonly channelThreeDimColorPallet: string    = "#a1a100";
-	public static readonly channelFourDimColorPallet: string     = "#c75000";
-	public static readonly channelFiveDimColorPallet: string     = "#d020d0";
-	public static readonly channelSixDimColorPallet: string      = "#552377";
-	public static readonly channelSevenDimColorPallet: string    = "#221b89";
-	public static readonly channelEightDimColorPallet: string    = "#00995f";
-	public static readonly channelNineDimColorPallet: string     = "#d6b03e";
-	public static readonly channelTenDimColorPallet: string      = "#b25915";
-	public static readonly channelElevenDimColorPallet: string   = "#891a60";
-	public static readonly channelTwelveDimColorPallet: string   = "#965cbc";
-	public static readonly channelThirteenDimColorPallet: string = "#991010";
-	public static readonly channelFourteenDimColorPallet: string = "#aaaaaa";
-	public static readonly channelFifteenDimColorPallet: string  = "#5869BD";
-	public static readonly channelSixteenDimColorPallet: string  = "#7c9b42";
+	static readonly channelOneDimColorPallet: string      = "#0099a1";
+	static readonly channelTwoDimColorPallet: string      = "#439143";
+	static readonly channelThreeDimColorPallet: string    = "#a1a100";
+	static readonly channelFourDimColorPallet: string     = "#c75000";
+	static readonly channelFiveDimColorPallet: string     = "#d020d0";
+	static readonly channelSixDimColorPallet: string      = "#552377";
+	static readonly channelSevenDimColorPallet: string    = "#221b89";
+	static readonly channelEightDimColorPallet: string    = "#00995f";
+	static readonly channelNineDimColorPallet: string     = "#d6b03e";
+	static readonly channelTenDimColorPallet: string      = "#b25915";
+	static readonly channelElevenDimColorPallet: string   = "#891a60";
+	static readonly channelTwelveDimColorPallet: string   = "#965cbc";
+	static readonly channelThirteenDimColorPallet: string = "#991010";
+	static readonly channelFourteenDimColorPallet: string = "#aaaaaa";
+	static readonly channelFifteenDimColorPallet: string  = "#5869BD";
+	static readonly channelSixteenDimColorPallet: string  = "#7c9b42";
 
-	public static readonly pitchChannelColorsDim: ReadonlyArray<string>    = [Config.channelOneDimColorPallet, Config.channelTwoDimColorPallet, Config.channelThreeDimColorPallet, Config.channelFourDimColorPallet, Config.channelFiveDimColorPallet, Config.channelSixDimColorPallet, Config.channelSevenDimColorPallet, Config.channelEightDimColorPallet, Config.channelNineDimColorPallet, Config.channelTenDimColorPallet, Config.channelElevenDimColorPallet, Config.channelTwelveDimColorPallet];
-	public static readonly pitchChannelColorsBright: ReadonlyArray<string> = [Config.channelOneBrightColorPallet, Config.channelTwoBrightColorPallet, Config.channelThreeBrightColorPallet, Config.channelFourBrightColorPallet, Config.channelFiveBrightColorPallet, Config.channelSixBrightColorPallet, Config.channelSevenBrightColorPallet, Config.channelEightBrightColorPallet, Config.channelNineBrightColorPallet, Config.channelTenBrightColorPallet, Config.channelElevenBrightColorPallet, Config.channelTwelveBrightColorPallet];
-	public static readonly pitchNoteColorsDim: ReadonlyArray<string>       = [Config.channelOneDimColorPallet, Config.channelTwoDimColorPallet, Config.channelThreeDimColorPallet, Config.channelFourDimColorPallet, Config.channelFiveDimColorPallet, Config.channelSixDimColorPallet, Config.channelSevenDimColorPallet, Config.channelEightDimColorPallet, Config.channelNineDimColorPallet, Config.channelTenDimColorPallet, Config.channelElevenDimColorPallet, Config.channelTwelveDimColorPallet];
-	public static readonly pitchNoteColorsBright: ReadonlyArray<string>    = [Config.channelOneBrightColorPallet, Config.channelTwoBrightColorPallet, Config.channelThreeBrightColorPallet, Config.channelFourBrightColorPallet, Config.channelFiveBrightColorPallet, Config.channelSixBrightColorPallet, Config.channelSevenBrightColorPallet, Config.channelEightBrightColorPallet, Config.channelNineBrightColorPallet, Config.channelTenBrightColorPallet, Config.channelElevenBrightColorPallet, Config.channelTwelveBrightColorPallet];
-	public static readonly drumChannelColorsDim: ReadonlyArray<string>    = [Config.channelThirteenDimColorPallet, Config.channelFourteenDimColorPallet, Config.channelFifteenDimColorPallet, Config.channelSixteenDimColorPallet];
-	public static readonly drumChannelColorsBright: ReadonlyArray<string> = [Config.channelThirteenBrightColorPallet, Config.channelFourteenBrightColorPallet, Config.channelFifteenBrightColorPallet, Config.channelSixteenBrightColorPallet];
-	public static readonly drumNoteColorsDim: ReadonlyArray<string>       = [Config.channelThirteenDimColorPallet, Config.channelFourteenDimColorPallet, Config.channelFifteenDimColorPallet, Config.channelSixteenDimColorPallet];
-	public static readonly drumNoteColorsBright: ReadonlyArray<string>    = [Config.channelThirteenBrightColorPallet, Config.channelFourteenBrightColorPallet, Config.channelFifteenBrightColorPallet, Config.channelSixteenBrightColorPallet];
+	static readonly pitchChannelColorsDim: ReadonlyArray<string>    = [Config.channelOneDimColorPallet, Config.channelTwoDimColorPallet, Config.channelThreeDimColorPallet, Config.channelFourDimColorPallet, Config.channelFiveDimColorPallet, Config.channelSixDimColorPallet, Config.channelSevenDimColorPallet, Config.channelEightDimColorPallet, Config.channelNineDimColorPallet, Config.channelTenDimColorPallet, Config.channelElevenDimColorPallet, Config.channelTwelveDimColorPallet];
+	static readonly pitchChannelColorsBright: ReadonlyArray<string> = [Config.channelOneBrightColorPallet, Config.channelTwoBrightColorPallet, Config.channelThreeBrightColorPallet, Config.channelFourBrightColorPallet, Config.channelFiveBrightColorPallet, Config.channelSixBrightColorPallet, Config.channelSevenBrightColorPallet, Config.channelEightBrightColorPallet, Config.channelNineBrightColorPallet, Config.channelTenBrightColorPallet, Config.channelElevenBrightColorPallet, Config.channelTwelveBrightColorPallet];
+	static readonly pitchNoteColorsDim: ReadonlyArray<string>       = [Config.channelOneDimColorPallet, Config.channelTwoDimColorPallet, Config.channelThreeDimColorPallet, Config.channelFourDimColorPallet, Config.channelFiveDimColorPallet, Config.channelSixDimColorPallet, Config.channelSevenDimColorPallet, Config.channelEightDimColorPallet, Config.channelNineDimColorPallet, Config.channelTenDimColorPallet, Config.channelElevenDimColorPallet, Config.channelTwelveDimColorPallet];
+	static readonly pitchNoteColorsBright: ReadonlyArray<string>    = [Config.channelOneBrightColorPallet, Config.channelTwoBrightColorPallet, Config.channelThreeBrightColorPallet, Config.channelFourBrightColorPallet, Config.channelFiveBrightColorPallet, Config.channelSixBrightColorPallet, Config.channelSevenBrightColorPallet, Config.channelEightBrightColorPallet, Config.channelNineBrightColorPallet, Config.channelTenBrightColorPallet, Config.channelElevenBrightColorPallet, Config.channelTwelveBrightColorPallet];
+	static readonly drumChannelColorsDim: ReadonlyArray<string>    = [Config.channelThirteenDimColorPallet, Config.channelFourteenDimColorPallet, Config.channelFifteenDimColorPallet, Config.channelSixteenDimColorPallet];
+	static readonly drumChannelColorsBright: ReadonlyArray<string> = [Config.channelThirteenBrightColorPallet, Config.channelFourteenBrightColorPallet, Config.channelFifteenBrightColorPallet, Config.channelSixteenBrightColorPallet];
+	static readonly drumNoteColorsDim: ReadonlyArray<string>       = [Config.channelThirteenDimColorPallet, Config.channelFourteenDimColorPallet, Config.channelFifteenDimColorPallet, Config.channelSixteenDimColorPallet];
+	static readonly drumNoteColorsBright: ReadonlyArray<string>    = [Config.channelThirteenBrightColorPallet, Config.channelFourteenBrightColorPallet, Config.channelFifteenBrightColorPallet, Config.channelSixteenBrightColorPallet];
 
-	public static readonly midiPitchChannelNames: ReadonlyArray<string> = ["cyan channel", "yellow channel", "orange channel", "green channel", "purple channel", "blue channel"];
-	public static readonly midiDrumChannelNames: ReadonlyArray<string> = ["gray channel", "brown channel", "indigo channel"];
-	public static readonly midiSustainInstruments: number[] = [
+	static readonly midiPitchChannelNames: ReadonlyArray<string> = ["cyan channel", "yellow channel", "orange channel", "green channel", "purple channel", "blue channel"];
+	static readonly midiDrumChannelNames: ReadonlyArray<string> = ["gray channel", "brown channel", "indigo channel"];
+	static readonly midiSustainInstruments: number[] = [
 		0x47, // triangle -> clarinet
 		0x50, // square -> square wave
 		0x46, // pulse wide -> bassoon
@@ -344,7 +367,7 @@ export class Config {
 		0x51, // spiky -> sawtooth wave
 		0x4A, // plateau -> recorder
 	];
-	public static readonly midiDecayInstruments: number[] = [
+	static readonly midiDecayInstruments: number[] = [
 		0x2E, // triangle -> harp
 		0x2E, // square -> harp
 		0x06, // pulse wide -> harpsichord
@@ -355,15 +378,14 @@ export class Config {
 		0x6A, // spiky -> shamisen
 		0x21, // plateau -> fingered bass
 	];
-	public static readonly drumInterval: number = 6;
-	public static readonly drumCount: number = 12;
-	public static readonly pitchCount: number = 37;
-	public static readonly maxPitch: number = 84;
-	public static readonly pitchChannelCountMin: number = 0;
-	public static readonly pitchChannelCountMax: number = 12;
-	public static readonly drumChannelCountMin: number = 0;
-	public static readonly drumChannelCountMax: number = 4;
-	public static readonly waves: ReadonlyArray<Float64Array> = [
+	static readonly drumInterval: number = 6;
+	static readonly pitchCount: number = 37;
+	static readonly maxPitch: number = 84;
+	static readonly pitchChannelCountMin: number = 0;
+	static readonly pitchChannelCountMax: number = 12;
+	static readonly drumChannelCountMin: number = 0;
+	static readonly drumChannelCountMax: number = 4;
+	static readonly waves: ReadonlyArray<Float64Array> = [
 		Config._centerWave([1.0/15.0, 3.0/15.0, 5.0/15.0, 7.0/15.0, 9.0/15.0, 11.0/15.0, 13.0/15.0, 15.0/15.0, 15.0/15.0, 13.0/15.0, 11.0/15.0, 9.0/15.0, 7.0/15.0, 5.0/15.0, 3.0/15.0, 1.0/15.0, -1.0/15.0, -3.0/15.0, -5.0/15.0, -7.0/15.0, -9.0/15.0, -11.0/15.0, -13.0/15.0, -15.0/15.0, -15.0/15.0, -13.0/15.0, -11.0/15.0, -9.0/15.0, -7.0/15.0, -5.0/15.0, -3.0/15.0, -1.0/15.0]),
 		Config._centerWave([1.0, -1.0]),
 		Config._centerWave([1.0, -1.0, -1.0, -1.0]),
@@ -395,7 +417,7 @@ export class Config {
 		Config._centerWave([1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]),
 		Config._centerWave([1.0, -0.9, 0.8, -0.7, 0.6, -0.5, 0.4, -0.3, 0.2, -0.1, 0.0, -0.1, 0.2, -0.3, 0.4, -0.5, 0.6, -0.7, 0.8, -0.9, 1.0]),
 	];
-	public static readonly wavesMixC: ReadonlyArray<Float64Array> = [
+	static readonly wavesMixC: ReadonlyArray<Float64Array> = [
 		Config._centerWave([1.0 / 15.0, 3.0 / 15.0, 5.0 / 15.0, 7.0 / 15.0, 9.0 / 15.0, 11.0 / 15.0, 13.0 / 15.0, 15.0 / 15.0, 15.0 / 15.0, 13.0 / 15.0, 11.0 / 15.0, 9.0 / 15.0, 7.0 / 15.0, 5.0 / 15.0, 3.0 / 15.0, 1.0 / 15.0, -1.0 / 15.0, -3.0 / 15.0, -5.0 / 15.0, -7.0 / 15.0, -9.0 / 15.0, -11.0 / 15.0, -13.0 / 15.0, -15.0 / 15.0, -15.0 / 15.0, -13.0 / 15.0, -11.0 / 15.0, -9.0 / 15.0, -7.0 / 15.0, -5.0 / 15.0, -3.0 / 15.0, -1.0 / 15.0]),
 		Config._centerWave([1.0, -1.0]),
 		Config._centerWave([1.0, -1.0, -1.0, -1.0]),
@@ -427,7 +449,7 @@ export class Config {
 		Config._centerWave([1.0, 1.9, 1.8, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2, 1.1, 1.0]),
 		Config._centerWave([-1.0, -0.9, 0.8, -0.7, 0.6, -0.5, 0.4, -0.3, 0.2, -0.1, 0.0, -0.1, 0.2, -0.3, 0.4, -0.5, 0.6, -0.7, 0.8, -0.9, -1.0]),
 	];
-	public static readonly pwmwaves: ReadonlyArray<Float64Array> = [
+	static readonly pwmwaves: ReadonlyArray<Float64Array> = [
 		Config._centerWave([1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]),
 		Config._centerWave([1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]),
 		Config._centerWave([1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]),
@@ -439,9 +461,9 @@ export class Config {
 		Config._centerWave([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]),
 		Config._centerWave([1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0]),
 	];
-	public static readonly sineWaveLength: number = 1 << 8; // 256
-	public static readonly sineWaveMask: number = Config.sineWaveLength - 1;
-	public static readonly sineWave: Float64Array = Config.generateSineWave();
+	static readonly sineWaveLength: number = 1 << 8; // 256
+	static readonly sineWaveMask: number = Config.sineWaveLength - 1;
+	static readonly sineWave: Float64Array = Config.generateSineWave();
 	
 	private static _centerWave(wave: Array<number>): Float64Array {
 		let sum: number = 0.0;
@@ -451,7 +473,7 @@ export class Config {
 		return new Float64Array(wave);
 	}
 	
-	public static getDrumWave(index: number): Float32Array {
+	static getDrumWave(index: number): Float32Array {
 		let wave: Float32Array | null = Config._drumWaves[index];
 		if (wave == null) {
 			wave = new Float32Array(32768);

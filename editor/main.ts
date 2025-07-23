@@ -15,7 +15,7 @@ beepboxEditorContainer.appendChild(editor.mainLayer);
 editor.whenUpdated();
 editor.mainLayer.focus();
 
-if (!isMobile && doc.autoPlay) {
+if (!isMobile && doc.prefs.autoPlay) {
 	function autoplay(): void {
 		if (!document.hidden) {
 			doc.synth.play();
