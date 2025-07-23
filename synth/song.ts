@@ -1393,7 +1393,7 @@ export class Instrument {
 				const scale: number = oldScaleNames[jsonObject.scale] != undefined ? oldScaleNames[jsonObject.scale] : Config.scales.map(scale=>scale.name).indexOf(jsonObject.scale);
 				if (scale != -1) this.scale = scale;
 				} else {
-					this.scale = jsonObject["scale"];
+					this.scale = Config.scales.map(scale=>scale.name).indexOf(jsonObject["scale"]);
 				}
 			}
 
@@ -1425,22 +1425,14 @@ export class Instrument {
 			}
 			
 			if (jsonObject.key != undefined) {
-				if (typeof(jsonObject.key) == "number") {
-					this.key = Config.oldKeys.length - 1 - (((jsonObject.key + 1200) >>> 0) % Config.oldKeys.length);
-				} else if (typeof(jsonObject.key) == "string") {
-					const key: string = jsonObject.key;
-					const letter: string = key.charAt(0).toUpperCase();
-					const symbol: string = key.charAt(1).toLowerCase();
-					const letterMap: Readonly<Dictionary<number>> = {"C": 11, "D": 9, "E": 7, "F": 6, "G": 4, "A": 2, "B": 0};
-					const accidentalMap: Readonly<Dictionary<number>> = {"#": -1, "♯": -1, "b": 1, "♭": 1};
-					let index: number | undefined = letterMap[letter];
-					const offset: number | undefined = accidentalMap[symbol];
-					if (index != undefined) {
-						if (offset != undefined) index += offset;
-						if (index < 0) index += 12;
-						index = index % 12;
-						this.key = index;
+				if (format == "BeepBox") {
+					if (typeof(jsonObject.key) == "number") {
+						this.key = Config.oldKeys.length - 1 - (((jsonObject.key + 1200) >>> 0) % Config.oldKeys.length);
+					} else if (typeof(jsonObject.key) == "string") {
+						this.key = Config.keys.map(key=>key.name).indexOf(jsonObject.key);
 					}
+				} else {
+					this.key = Config.keys.map(key=>key.name).indexOf(jsonObject.key);
 				}
 			}
 			
