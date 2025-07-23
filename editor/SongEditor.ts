@@ -150,10 +150,11 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _fileMenu: HTMLSelectElement = select({style: "width: 100%;"}, 
 			option({selected: true, disabled: true, hidden: false}, "File Menu"),
 			option({value: "cleanS"}, "New Song"),
-			option({value: "import"}, "Import JSON"),
-			option({value: "export"}, "Export Song"),
-			option({value: "songdata"}, "Song Data"),
-			option({value: "manual"}, "Open Manual"),
+			option({value: "import"}, "Import JSON..."),
+			option({value: "export"}, "Export Song..."),
+			option({value: "shortenUrl"}, "Shorten Song Url..."),
+			option({value: "songdata"}, "Song Data..."),
+			option({value: "manual"}, "Open Manual..."),
 		);
 		private readonly _editMenu: HTMLSelectElement = select({style: "width: 100%;"}, 
 			option({selected: true, disabled: true, hidden: false}, "Edit Menu"),
@@ -1312,6 +1313,9 @@ const {button, div, span, select, option, input, a} = HTML;
 				case "manual":
 					window.open("./manual.html");
 					break;
+				case "shortenUrl":
+					window.open("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(new URL("#" + this._doc.song.toBase64String(), location.href).href));
+				break;
 			}
 			this._fileMenu.selectedIndex = 0;
 		}
