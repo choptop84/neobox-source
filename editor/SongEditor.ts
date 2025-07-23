@@ -75,6 +75,10 @@ const {button, div, span, select, option, input, a} = HTML;
 	function setSelectedIndex(menu: HTMLSelectElement, index: number): void {
 		if (menu.selectedIndex != index) menu.selectedIndex = index;
 	}
+
+	function setSelectedValue(menu: HTMLInputElement, index: string): void {
+		if (menu.value != index) menu.value = index;
+	}
 	
 	interface PatternCopy {
 		notes: Note[];
@@ -235,7 +239,11 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _algorithmSelect: HTMLSelectElement = buildOptions(select({}), Config.operatorAlgorithmNames);
 		private readonly _algorithmSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Algorithm: ")), div({class: "selectContainer"}, this._algorithmSelect));
 		private readonly _instrumentSelect: HTMLSelectElement = select({});
-		private readonly _instrumentSelectRow: HTMLDivElement = div({class: "selectRow", style: "display: none;"}, span({}, div({},"Instrument: ")), div({class: "selectContainer"}, this._instrumentSelect));
+		private readonly _instrumentInput: HTMLInputElement = input({class: "numberInput", type:"number", min:1});
+		private readonly _instrumentSelectRow: HTMLDivElement = div({class: "selectRow", style: "display: none;"}, span({}, div({},"Instrument: ")), 
+		div({class: "inputContainer"}, 
+			this._instrumentInput
+		));
 		private readonly _instrumentVolumeSlider: Slider = new Slider(input({style: "margin: 8px; width: 60px;", type: "range", min: "-9", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeVolume(this._doc, oldValue, -newValue));
 		private readonly _instrumentMVolumeSlider: Slider = new Slider(input({style: "margin: 8px; width: 60px;", type: "range", min: "-5", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeVolume(this._doc, oldValue, -newValue));
 		private readonly _instrumentVolumeSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Volume: ")), this._instrumentVolumeSlider.input, this._imuteButton);
@@ -454,7 +462,8 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._partSelect.addEventListener("change", this._whenSetPartsPerBeat);
 			this._instrumentTypeSelect.addEventListener("change", this._whenSetInstrumentType);
 			this._algorithmSelect.addEventListener("change", this._whenSetAlgorithm);
-			this._instrumentSelect.addEventListener("change", this._whenSetInstrument);
+			//this._instrumentSelect.addEventListener("change", this._whenSetInstrument);
+			this._instrumentInput.addEventListener("change", this._whenSetInstrument);
 			this._feedbackTypeSelect.addEventListener("change", this._whenSetFeedbackType);
 			this._feedbackEnvelopeSelect.addEventListener("change", this._whenSetFeedbackEnvelope);
 			this._waveSelect.addEventListener("change", this._whenSetWave);
@@ -485,6 +494,8 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._mixHint.addEventListener("click", this._openMixPrompt);
 			this._chorusHint.addEventListener("click", this._openChorusPrompt);
 			this._archiveHint.addEventListener("click", this._openArchivePrompt);
+
+			this._instrumentInput.addEventListener("keydown", this._captureNumberKeys, false);
 			
 			this._editorBox.addEventListener("mousedown", this._refocusStage);
 			this.mainLayer.addEventListener("keydown", this._whenKeyPressed);
@@ -720,13 +731,19 @@ const {button, div, span, select, option, input, a} = HTML;
 			
 			this._instrumentSelectRow.style.display = (this._doc.song.instrumentsPerChannel > 1) ? "" : "none";
 			this._instrumentSelectRow.style.visibility = (pattern == null) ? "hidden" : "";
-			if (this._instrumentSelect.children.length != this._doc.song.instrumentsPerChannel) {
+			/*if (this._instrumentSelect.children.length != this._doc.song.instrumentsPerChannel) {
 				while (this._instrumentSelect.firstChild) this._instrumentSelect.removeChild(this._instrumentSelect.firstChild);
 				const instrumentList: number[] = [];
 				for (let i: number = 0; i < this._doc.song.instrumentsPerChannel; i++) {
 					instrumentList.push(i + 1);
 				}
 				buildOptions(this._instrumentSelect, instrumentList);
+			}*/
+
+			console.log(this._doc.song.instrumentsPerChannel);
+
+			if (this._instrumentInput.max != String(this._doc.song.instrumentsPerChannel)) {
+				this._instrumentInput.max = String(this._doc.song.instrumentsPerChannel);
 			}
 			
 			if (instrument.imute == 0) {
@@ -761,6 +778,7 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._instrumentMVolumeSlider.updateValue(-instrument.volume);
 			this._ipanSlider.updateValue(-instrument.ipan);
 			setSelectedIndex(this._instrumentSelect, instrumentIndex);
+			setSelectedValue(this._instrumentInput, String(instrumentIndex+1));
 			for (let i: number = 0; i < Config.operatorCount; i++) {
 				const isCarrier: boolean = (i < Config.operatorCarrierCounts[instrument.algorithm]);
 				this._operatorRows[i].style.color = isCarrier ? "white" : "";
@@ -852,6 +870,31 @@ const {button, div, span, select, option, input, a} = HTML;
 				this._playButton.title = "Play (Space)";
 				this._playButton.innerText = "Play";
 			}
+		}
+
+		private _captureNumberKeys = (event: KeyboardEvent): void => {
+        // When the number input is in focus, allow some keyboard events to
+        // edit the input without accidentally editing the song otherwise.
+			switch (event.keyCode) {
+				case 8: // backspace/delete
+				case 13: // enter/return
+				case 38: // up
+				case 40: // down
+				case 37: // left
+				case 39: // right
+				case 48: // 0
+				case 49: // 1
+				case 50: // 2
+				case 51: // 3
+				case 52: // 4
+				case 53: // 5
+				case 54: // 6
+				case 55: // 7
+				case 56: // 8
+				case 57: // 9
+					event.stopPropagation();
+					break;
+        	}
 		}
 		
 		private _whenKeyPressed = (event: KeyboardEvent): void => {
@@ -1209,7 +1252,7 @@ const {button, div, span, select, option, input, a} = HTML;
 		private _whenSetInstrument = (): void => {
 			const pattern : Pattern | null = this._doc.getCurrentPattern();
 			if (pattern == null) return;
-			this._doc.record(new ChangePatternInstrument(this._doc, this._instrumentSelect.selectedIndex, pattern));
+			this._doc.record(new ChangePatternInstrument(this._doc, Number(this._instrumentInput.value)-1, pattern));
 		}
 		
 		private _whenSetWave = (): void => {

@@ -175,6 +175,10 @@ background: ${ColorConfig.pageMargin};
 	font-family: inherit;
 	cursor: pointer;
 }
+.beepboxEditor .numberInput {
+	width: 3em !important;
+  	margin-left: 1em;
+}
 .beepboxEditor button:focus {
 	background: ${ColorConfig.uiWidgetFocus};
 	outline: none;
@@ -300,6 +304,19 @@ background: ${ColorConfig.pageMargin};
 }
 
 .beepboxEditor .selectRow > span {
+	color: ${ColorConfig.secondaryText};
+}
+
+.beepboxEditor .inputRow {
+	margin: 0;
+	height: 2.5em;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.beepboxEditor .inputRow > span {
 	color: ${ColorConfig.secondaryText};
 }
 
