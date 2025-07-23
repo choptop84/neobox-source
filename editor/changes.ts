@@ -22,7 +22,7 @@ SOFTWARE.
 
 import { SongDocument } from "./SongDocument";
 import { Change, UndoableChange, ChangeSequence, ChangeGroup } from "./Change";
-import { NotePin, Note, Instrument, Channel, Pattern, makeNotePin, Song } from "../synth/synth";
+import { NotePin, Note, Song, Pattern, makeNotePin, Instrument, Channel } from "../synth/song";
 import { InstrumentType, Config } from "../synth/SynthConfig";
 
 	export class ChangePins extends UndoableChange {

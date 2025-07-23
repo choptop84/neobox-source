@@ -22,7 +22,7 @@ SOFTWARE.
 
 import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
 import { SongDocument } from "./SongDocument";
-import { Pattern } from "../synth/synth";
+import { Pattern } from "../synth/song";
 import { ChangePattern, ChangeChannelBar } from "./changes";
 import { ColorConfig } from "./ColorConfig";
 	const {select, div, option} = HTML;

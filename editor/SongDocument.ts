@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-import { Song, Synth, Pattern } from "../synth/synth";
+import { Synth} from "../synth/synth";
+import { Song, Pattern  } from "../synth/song";
 import { ChangeNotifier } from "./ChangeNotifier";
 import { Change } from "./Change";
 import { ChangeSong } from "./changes";

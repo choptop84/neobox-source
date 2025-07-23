@@ -2,7 +2,7 @@
 
 import { HTML } from "imperative-html/dist/esm/elements-strict";
 import {DictionaryArray, BeepBoxOption, toNameMap} from "../synth/SynthConfig";
-import { Song } from "../synth/synth";
+import { Song } from "../synth/song";
 
 export interface ChannelColors extends BeepBoxOption {
     readonly secondaryChannel: string;

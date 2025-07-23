@@ -25,7 +25,7 @@ import { SongDocument } from "./SongDocument";
 import {Change} from "./Change";
 import {PatternEditor} from "./PatternEditor";
 import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
-import { Note, Channel, Pattern, Instrument } from "../synth/synth";
+import { Channel, Instrument, Note, Pattern } from "../synth/song";
 import { InstrumentType, Config } from "../synth/SynthConfig";
 import { TrackEditor } from "./TrackEditor";
 import { LoopEditor } from "./LoopEditor";

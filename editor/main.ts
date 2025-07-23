@@ -2,7 +2,8 @@
 
 import {InstrumentType, Config} from "../synth/SynthConfig";
 import {isMobile, SongEditor} from "./SongEditor";
-import {NotePin, Note, Pattern, Instrument, Channel, Song, Synth} from "../synth/synth";
+import {Synth} from "../synth/synth";
+import {Instrument, Channel, NotePin, Note, Pattern, Song } from "../synth/song";
 import {SongDocument} from "./SongDocument";
 import {ExportPrompt} from "./ExportPrompt";
 import "./style"; // Import for the side effects, there's no exports.

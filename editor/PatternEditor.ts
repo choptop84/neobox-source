@@ -22,7 +22,7 @@ SOFTWARE.
 
 import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
 import { SongDocument } from "./SongDocument";
-import { Note, NotePin, makeNotePin, makeNote, Pattern } from "../synth/synth";
+import { Note, NotePin, makeNotePin, makeNote, Pattern } from "../synth/song";
 import {Config} from "../synth/SynthConfig";
 import { UndoableChange, ChangeSequence } from "./Change";
 import { ChangeChannelBar, ChangeNoteAdded, ChangeNoteTruncate, ChangePinTime, ChangeVolumeBend, ChangePitchBend, ChangePitchAdded, ChangeEnsurePatternExists } from "./changes";
