@@ -98,7 +98,8 @@ export class Config {
 	]);
 	static readonly mixNames: ReadonlyArray<string> = ["Type A (B & S)", "Type B (M)", "Type C"];
 	static readonly sampleRateNames: ReadonlyArray<string> = ["44100kHz", "48000kHz", "default", "×4", "×2", "÷2", "÷4", "÷8", "÷16"];
-	static readonly tempoSteps: number = 24;
+	static readonly tempoMin: number = 1;
+	static readonly tempoMax: number = 500;
 	static readonly reverbRange: number = 5;
 	static readonly blendRange: number = 4;
 	static readonly riffRange: number = 11;

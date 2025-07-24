@@ -226,7 +226,8 @@ const {button, div, span, select, option, input, a} = HTML;
 		// private readonly _chipHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _instrumentTypeHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _keySelect: HTMLSelectElement = buildOptions(select({}), Config.keys.map(key=>key.name).reverse());
-		private readonly _tempoSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.tempoSteps - 1, value: "7", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeTempo(this._doc, oldValue, newValue));
+		private readonly _tempoStepper: HTMLInputElement = input({class: "numberInput", style:"margin-left:0.5em", type:"number", min:Config.tempoMin, max: Config.tempoMax});
+		private readonly _tempoSlider: Slider = new Slider(input({style: "margin: 0px; width: 60px", type: "range", min: Config.tempoMin, max: Config.tempoMax, value: "160", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeTempo(this._doc, oldValue, newValue));
 		private readonly _reverbSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.reverbRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeReverb(this._doc, oldValue, newValue));
 		private readonly _blendSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.blendRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeBlend(this._doc, oldValue, newValue));
 		private readonly _riffSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.riffRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeRiff(this._doc, oldValue, newValue));
@@ -312,7 +313,8 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _songSettingsGroup: HTMLDivElement = div({ class: "editor-song-settings" }, 
 			div({ class: "selectRow" }, span({}, div({},"Scale: ")), div({ class: "selectContainer", style: "margin: 3px 0; text-align: center; color: #ccc;" }, this._scaleSelect)),
 			div({ class: "selectRow" }, span({}, div({},"Key: ")), div({ class: "selectContainer", style: "margin: 3px 0; text-align: center; color: #ccc;" }, this._keySelect)),
-			div({ class: "selectRow" }, span({}, div({},"Tempo: ")), this._tempoSlider.input),
+			div({ class: "selectRow" }, span({}, div({},"Tempo: ")), 
+			div({ style: "display: flex; flex-direction: row;" }, this._tempoSlider.input, this._tempoStepper)),
 			div({ class: "selectRow" }, span({}, div({},"Reverb: ")), this._reverbSlider.input),
 			div({ class: "selectRow" }, span({}, div({},"Rhythm: ")), div({ class: "selectContainer", style: "margin: 3px 0; text-align: center; color: #ccc;" }, this._partSelect)),
 		);
@@ -496,7 +498,10 @@ const {button, div, span, select, option, input, a} = HTML;
 			this._chorusHint.addEventListener("click", this._openChorusPrompt);
 			this._archiveHint.addEventListener("click", this._openArchivePrompt);
 
+			this._tempoStepper.addEventListener("change", this._whenSetTempo);
+
 			this._instrumentInput.addEventListener("keydown", this._captureNumberKeys, false);
+			this._tempoStepper.addEventListener("keydown", this._captureNumberKeys, false);
 			
 			this._editorBox.addEventListener("mousedown", this._refocusStage);
 			this.mainLayer.addEventListener("keydown", this._whenKeyPressed);
@@ -638,6 +643,7 @@ const {button, div, span, select, option, input, a} = HTML;
 			setSelectedIndex(this._sampleRateSelect, this._doc.song.sampleRate);
 			setSelectedIndex(this._keySelect, Config.keys.length - 1 - this._doc.song.key);
 			this._tempoSlider.updateValue(this._doc.song.tempo);
+			this._tempoStepper.value = String(this._doc.song.tempo);
 			this._tempoSlider.input.title = this._doc.song.getBeatsPerMinute() + " beats per minute";
 			this._reverbSlider.updateValue(this._doc.song.reverb);
 			this._advancedSettingsContainer.style.display = this._doc.prefs.advancedSettings ? "" : "none";
@@ -871,6 +877,10 @@ const {button, div, span, select, option, input, a} = HTML;
 				this._playButton.title = "Play (Space)";
 				this._playButton.innerText = "Play";
 			}
+		}
+		
+		public _whenSetTempo = ():void => {
+			this._doc.record(new ChangeTempo(this._doc, -1, parseInt(this._tempoStepper.value) | 0));
 		}
 
 		private _captureNumberKeys = (event: KeyboardEvent): void => {
