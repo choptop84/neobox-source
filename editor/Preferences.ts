@@ -4,11 +4,11 @@ export class Preferences {
 
     autoPlay: boolean = localStorage.getItem("autoPlay") == "true";
 	autoFollow: boolean = localStorage.getItem("autoFollow") == "true";
-	showFifth: boolean = localStorage.getItem("showFifth") == "true";
+	showFifth: boolean = localStorage.getItem("showFifth") != "false";
 	showMore: boolean = localStorage.getItem("showMore") == "true";
-	showLetters: boolean = localStorage.getItem("showLetters") == "true";
+	showLetters: boolean = localStorage.getItem("showLetters") != "false";
 	showChannels: boolean = localStorage.getItem("showChannels") == "true";
-	showScrollBar: boolean = localStorage.getItem("showScrollBar") == "true";
+	showScrollBar: boolean = localStorage.getItem("showScrollBar") != "false";
 	showVolumeBar: boolean = localStorage.getItem("showVolumeBar") == "true";
 	advancedSettings: boolean = localStorage.getItem("advancedSettings") != "false";
 	visibleOctaves: number = Preferences.defaultVisibleOctaves;
