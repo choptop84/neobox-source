@@ -24,6 +24,7 @@ import { HTML, SVG } from "imperative-html/dist/esm/elements-strict";
 import { SongDocument } from "./SongDocument";
 import { ChangeOctave } from "./changes";
 import { ColorConfig } from "./ColorConfig";
+import { Piano } from "./Piano";
 	const {div} = HTML;
 
 	export class OctaveScrollBar {
@@ -52,7 +53,7 @@ import { ColorConfig } from "./ColorConfig";
 		private _renderedBarBottom: number = -1;
 		private _change: ChangeOctave | null = null;
 		
-		constructor(private _doc: SongDocument) {
+		constructor(private _doc: SongDocument, private _piano: Piano) {
 			this._doc.notifier.watch(this._documentChanged);
 			this._documentChanged();
 			
@@ -234,6 +235,7 @@ import { ColorConfig } from "./ColorConfig";
 		private _documentChanged = (): void => {
 			this._barBottom = this._editorHeight - (this._octaveHeight * this._doc.song.channels[this._doc.channel].octave);
 			this._render();
+			this._piano.forceRender();
 		}
 		
 		private _render(): void {

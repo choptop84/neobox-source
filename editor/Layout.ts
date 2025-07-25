@@ -153,6 +153,9 @@ export class Layout {
 			overflow-y: hidden;
 		}
 
+		.advanced-settings-area {
+		overflow-y: scroll;
+		}
 
 		.centerDiv {
 			width: unset !important;
@@ -241,6 +244,11 @@ export class Layout {
 		.beepboxEditor .selectContainer.menu::after {
 			content: none !important;
 		}
+
+		.beepboxEditor .settings-area .editor-widgets .editor-menus {
+			width: 8em !important;
+		}
+
 		`,
 	}
 	

@@ -241,7 +241,7 @@ import { Preferences } from "./Preferences";
 		}
 
 		public getVisibleOctaveCount(): number {
-		return this.getFullScreen() ? this.prefs.visibleOctaves : Preferences.defaultVisibleOctaves;
+		return this.prefs.visibleOctaves;
 		}
 		
 		public getVisiblePitchCount(): number {
@@ -249,8 +249,7 @@ import { Preferences } from "./Preferences";
 		}
 
 		public getBaseVisibleOctave(channel: number): number {
-		const visibleOctaveCount: number = this.getVisibleOctaveCount();
-		return Math.max(0, Math.min(Config.pitchOctaves - visibleOctaveCount, Math.ceil(this.song.channels[channel].octave - visibleOctaveCount * 0.5)));
+		return this.song.channels[channel].octave;
 		}
 	}
 

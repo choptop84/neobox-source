@@ -74,6 +74,11 @@ import { ColorConfig } from "./ColorConfig";
 			this.container.addEventListener("touchcancel", this._whenTouchReleased);
 		}
 		
+		public forceRender(): void {
+			this._renderedScale = -1;
+			this._documentChanged();
+		}
+
 		private _updateCursorPitch(): void {
 		const scale: ReadonlyArray<boolean> = Config.scales[this._doc.song.scale].flags;
 		const mousePitch: number = Math.max(0, Math.min(this._pitchCount-1, this._pitchCount - (this._mouseY / this._pitchHeight)));
@@ -244,33 +249,42 @@ import { ColorConfig } from "./ColorConfig";
 					} else {
 						this._pianoKeys[j].classList.remove("disabled");
 						this._pianoLabels[j].style.display = "";
-						
 						const label: HTMLDivElement = this._pianoLabels[j];
+						if ((j % 12) == 0) {
+							label.style.transform = "translate(-5px, 0px)";
+						}
+						else {
+							label.style.transform = "translate(0px, 0px)";
+						}
 						label.style.color = Config.keys[pitchNameIndex].isWhiteKey ? "black" : "white";
-						label.textContent = Piano.getPitchName(pitchNameIndex, j);
+						label.textContent = Piano.getPitchName(pitchNameIndex, j, this._doc.getBaseVisibleOctave(this._doc.channel));
 					}
 				}
 			}
 			this._updatePreview();
 		}
 	
-		public static getPitchName(pitchNameIndex: number, scaleIndex: number): string {
-			let text: string;
-			
-			if (Config.keys[pitchNameIndex].isWhiteKey) {
-				text = Config.keys[pitchNameIndex].name;
-			} else {
-				const shiftDir: number = Config.blackKeyNameParents[scaleIndex % Config.pitchesPerOctave];
-				text = Config.keys[(pitchNameIndex + Config.pitchesPerOctave + shiftDir) % Config.pitchesPerOctave].name;
-				if (shiftDir == 1) {
-					text += "♭";
-				} else if (shiftDir == -1) {
-					text += "♯";
-				}
+		public static getPitchName(pitchNameIndex: number, scaleIndex: number, baseVisibleOctave: number): string {
+		let text: string;
+
+		if (Config.keys[pitchNameIndex].isWhiteKey) {
+			text = Config.keys[pitchNameIndex].name;
+		} else {
+			const shiftDir: number = Config.blackKeyNameParents[scaleIndex % Config.pitchesPerOctave];
+			text = Config.keys[(pitchNameIndex + Config.pitchesPerOctave + shiftDir) % Config.pitchesPerOctave].name;
+			if (shiftDir == 1) {
+				text += "♭";
+			} else if (shiftDir == -1) {
+				text += "♯";
 			}
-			
-			return text;
 		}
+
+		if (scaleIndex % 12 == 0) {
+			text += Math.floor(scaleIndex / 12) + baseVisibleOctave;
+		}
+
+		return text;
+	}
 		
 	}
 

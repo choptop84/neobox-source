@@ -11,7 +11,7 @@ export class Preferences {
 	showScrollBar: boolean = localStorage.getItem("showScrollBar") != "false";
 	showVolumeBar: boolean = localStorage.getItem("showVolumeBar") == "true";
 	advancedSettings: boolean = localStorage.getItem("advancedSettings") != "false";
-	visibleOctaves: number = Preferences.defaultVisibleOctaves;
+	visibleOctaves: number = localStorage.getItem("visibleOctaves") != null ? Number(localStorage.getItem("visibleOctaves")) : Preferences.defaultVisibleOctaves;
     layout: string = localStorage.getItem("layout") || "small";
 	volume: number = localStorage.getItem("volume") != null ? Number(localStorage.getItem("volume")) : 75;
 
@@ -25,6 +25,7 @@ export class Preferences {
 		localStorage.setItem("showScrollBar", this.showScrollBar ? "true" : "false");
 		localStorage.setItem("showVolumeBar", this.showVolumeBar ? "true" : "false");
 		localStorage.setItem("advancedSettings", this.advancedSettings ? "true" : "false");
+		localStorage.setItem("visibleOctaves", String(this.visibleOctaves));
 		localStorage.setItem("volume", String(this.volume));
 	}
 

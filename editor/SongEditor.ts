@@ -127,8 +127,8 @@ const {button, div, span, select, option, input, a} = HTML;
 		);
 		private readonly _trackVisibleArea: HTMLDivElement = div({style: "position: absolute; width: 100%; height: 100%; pointer-events: none;"});
 		private readonly _barScrollBar: BarScrollBar = new BarScrollBar(this._doc, this._trackContainer);
-		private readonly _octaveScrollBar: OctaveScrollBar = new OctaveScrollBar(this._doc);
 		private readonly _piano: Piano = new Piano(this._doc);
+		private readonly _octaveScrollBar: OctaveScrollBar = new OctaveScrollBar(this._doc, this._piano);
 		private readonly _editorBox: HTMLDivElement = div({class: "editorBox", style: "height: 481px; display: flex; flex-direction: row; margin-bottom: 6px;"}, 
 				this._piano.container,
 				this._patternEditor.container,
@@ -222,22 +222,22 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _sampleRateSelect: HTMLSelectElement = buildOptions(select({}), Config.sampleRateNames);
 		private readonly _mixHint: HTMLAnchorElement = <HTMLAnchorElement> a({ class: "hintButton" }, div({},"?"));
 		private readonly _archiveHint: HTMLAnchorElement = <HTMLAnchorElement> a({ class: "hintButton" }, div({},"?"));
-		private readonly _mixSelectRow: HTMLDivElement = div({class: "selectRow"}, this._mixHint, this._mixSelect);
+		private readonly _mixSelectRow: HTMLDivElement = div({class: "selectRow"}, this._mixSelect);
 		// private readonly _chipHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _instrumentTypeHint: HTMLAnchorElement = <HTMLAnchorElement> a( { class: "hintButton" }, div({},"?"));
 		private readonly _keySelect: HTMLSelectElement = buildOptions(select({}), Config.keys.map(key=>key.name).reverse());
 		private readonly _tempoStepper: HTMLInputElement = input({class: "numberInput", style:"margin-left:0.5em", type:"number", min:Config.tempoMin, max: Config.tempoMax});
-		private readonly _tempoSlider: Slider = new Slider(input({style: "margin: 0px; width: 60px", type: "range", min: Config.tempoMin, max: Config.tempoMax, value: "160", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeTempo(this._doc, oldValue, newValue));
+		private readonly _tempoSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: Config.tempoMin, max: Config.tempoMax, value: "160", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeTempo(this._doc, oldValue, newValue));
 		private readonly _reverbSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.reverbRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeReverb(this._doc, oldValue, newValue));
-		private readonly _blendSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.blendRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeBlend(this._doc, oldValue, newValue));
-		private readonly _riffSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.riffRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeRiff(this._doc, oldValue, newValue));
-		private readonly _detuneSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.detuneRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeDetune(this._doc, oldValue, newValue));
-		private readonly _muffSlider: Slider = new Slider(input({style: "width: 9em; margin: 0px;", type: "range", min: "0", max: Config.muffRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeMuff(this._doc, oldValue, newValue));
-		private readonly _imuteButton: HTMLButtonElement = button({ style: "width: 27px;", type: "button" });
-		private readonly _iMmuteButton: HTMLButtonElement = button({ style: "width: 27px;", type: "button" });
+		private readonly _blendSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.blendRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeBlend(this._doc, oldValue, newValue));
+		private readonly _riffSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.riffRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeRiff(this._doc, oldValue, newValue));
+		private readonly _detuneSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.detuneRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeDetune(this._doc, oldValue, newValue));
+		private readonly _muffSlider: Slider = new Slider(input({style: "margin: 0px;", type: "range", min: "0", max: Config.muffRange - 1, value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeMuff(this._doc, oldValue, newValue));
+		private readonly _imuteButton: HTMLButtonElement = button({ style: "width: 27px; margin-left: 0.5em;", type: "button" });
+		private readonly _iMmuteButton: HTMLButtonElement = button({ style: "width: 27px; margin-left: 0.5em;", type: "button" });
 		private readonly _partSelect: HTMLSelectElement = buildOptions(select({}), Config.partNames);
 		private readonly _instrumentTypeSelect: HTMLSelectElement = buildOptionsWithSpecificValues(select({}), Config.pitchChannelTypeNames, Config.pitchChannelTypeValues);
-		private readonly _instrumentTypeSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Type: ")), this._instrumentTypeHint, div({class: "selectContainer"}, this._instrumentTypeSelect));
+		private readonly _instrumentTypeSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({style:"display:flex;"},"Type: ", this._instrumentTypeHint)), div({class: "selectContainer"}, this._instrumentTypeSelect));
 		private readonly _algorithmSelect: HTMLSelectElement = buildOptions(select({}), Config.operatorAlgorithmNames);
 		private readonly _algorithmSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Algorithm: ")), div({class: "selectContainer"}, this._algorithmSelect));
 		private readonly _instrumentSelect: HTMLSelectElement = select({});
@@ -246,10 +246,12 @@ const {button, div, span, select, option, input, a} = HTML;
 		div({class: "inputContainer"}, 
 			this._instrumentInput
 		));
-		private readonly _instrumentVolumeSlider: Slider = new Slider(input({style: "margin: 8px; width: 60px;", type: "range", min: "-9", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeVolume(this._doc, oldValue, -newValue));
-		private readonly _instrumentMVolumeSlider: Slider = new Slider(input({style: "margin: 8px; width: 60px;", type: "range", min: "-5", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeVolume(this._doc, oldValue, -newValue));
-		private readonly _instrumentVolumeSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Volume: ")), this._instrumentVolumeSlider.input, this._imuteButton);
-		private readonly _instrumentMVolumeSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Volume: ")), this._instrumentMVolumeSlider.input, this._iMmuteButton);
+		private readonly _instrumentVolumeSlider: Slider = new Slider(input({ type: "range", min: "-9", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeVolume(this._doc, oldValue, -newValue));
+		private readonly _instrumentMVolumeSlider: Slider = new Slider(input({ type: "range", min: "-5", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeVolume(this._doc, oldValue, -newValue));
+		private readonly _instrumentVolumeSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Volume: ")), 
+		div({ style:"display: flex; flex-direction: row;" },this._instrumentVolumeSlider.input, this._imuteButton));
+		private readonly _instrumentMVolumeSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Volume: ")), 
+		div({ style:"display: flex; flex-direction: row;" },this._instrumentMVolumeSlider.input, this._iMmuteButton));
 		private readonly _SettingsLabel: HTMLDivElement = div({ style: "margin: 3px 0; text-align: center; color: rgb(170, 170, 170);" }, div({},"Settings"));
 		private readonly _advancedInstrumentSettingsLabel: HTMLDivElement = div({ style: "margin: 3px 0; text-align: center;" }, div({},"Advanced Instrument Settings"));
 		private readonly _waveSelect: HTMLSelectElement = buildOptions(select({}), Config.waveNames);
@@ -265,24 +267,27 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _effectSelect: HTMLSelectElement = buildOptions(select({}), Config.effectNames);
 		private readonly _effectSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Effect: ")), div({class: "selectContainer"}, this._effectSelect));
 		private readonly _harmSelect: HTMLSelectElement = buildOptions(select({}), Config.harmDisplay);
-		private readonly _harmSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Chord: ")), this._chorusHint, div({class: "selectContainer"}, this._harmSelect));
+		private readonly _harmSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({style:"display:flex;"},"Chord: ", this._chorusHint)), div({class: "selectContainer"}, this._harmSelect));
 		private readonly _octoffSelect: HTMLSelectElement = buildOptions(select({}), Config.octoffNames);
 		private readonly _octoffSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Octave Offset: ")), div({class: "selectContainer"}, this._octoffSelect));
 		private readonly _fmChorusSelect: HTMLSelectElement = buildOptions(select({}), Config.fmChorusDisplay);
 		private readonly _fmChorusSelectRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"FM Chorus: ")), div({class: "selectContainer"}, this._fmChorusSelect));
-		private readonly _ipanSlider: Slider = new Slider(input({style: "margin: 8px; width: 100px;", type: "range", min: "-8", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeIpan(this._doc, oldValue, -newValue));
-		private readonly _ipanSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Panning: ")), span({}, div({},"L")), this._ipanSlider.input, span({}, div({},"R")));
+		private readonly _ipanSlider: Slider = new Slider(input({ type: "range", min: "-8", max: "0", value: "0", step: "1"}), this._doc, (oldValue: number, newValue: number) => new ChangeIpan(this._doc, oldValue, -newValue));
+		private readonly _ipanSliderRow: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Panning: ")),
+		div({style:"display:flex;"},
+			span({style:"margin-right: 0.5em; align-content: center;"}, div({},"L")), 
+			this._ipanSlider.input, 
+			span({style:"margin-left: 0.5em; align-content: center;"}, div({},"R"))
+		));
 		private readonly _phaseModGroup: HTMLElement = div({style: "display: flex; flex-direction: column; display: none;"}, );
 		private readonly _feedbackTypeSelect: HTMLSelectElement = buildOptions(select({}), Config.operatorFeedbackNames);
 		private readonly _feedbackRow1: HTMLDivElement = div({class: "selectRow"}, span({}, div({},"Feedback:")), div({class: "selectContainer"}, this._feedbackTypeSelect));
 		
-		private readonly _feedbackAmplitudeSlider: Slider = new Slider(input({style: "margin: 0px; width: 4em;", type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude"}), this._doc, (oldValue: number, newValue: number) => new ChangeFeedbackAmplitude(this._doc, oldValue, newValue));
+		private readonly _feedbackAmplitudeSlider: Slider = new Slider(input({style: "margin: 0px; flex: 1; width: 4em;", type: "range", min: "0", max: Config.operatorAmplitudeMax, value: "0", step: "1", title: "Feedback Amplitude"}), this._doc, (oldValue: number, newValue: number) => new ChangeFeedbackAmplitude(this._doc, oldValue, newValue));
 		private readonly _feedbackEnvelopeSelect: HTMLSelectElement = buildOptions(select({style: "width: 100%;", title: "Feedback Envelope"}), Config.operatorEnvelopeNames);
 		private readonly _feedbackRow2: HTMLDivElement = div({class: "operatorRow"}, 
-			div({style: "margin-right: .1em; visibility: hidden;"}, div({},1 + ".")),
-			div({style: "width: 3em; margin-right: .3em;"}),
 			this._feedbackAmplitudeSlider.input,
-			div({class: "selectContainer", style: "width: 5em; margin-left: .3em;"}, this._feedbackEnvelopeSelect),
+			div({class: "selectContainer", style: "width:0; margin-left: .3em;"}, this._feedbackEnvelopeSelect),
 		);
 
 		private readonly _songSettingsButton: HTMLButtonElement = button({style:"flex: 1; border-bottom: solid 2px var(--link-accent);"}, "Song");
@@ -328,7 +333,7 @@ const {button, div, span, select, option, input, a} = HTML;
 		private readonly _promptContainer: HTMLDivElement = div({class: "promptContainer", id: "promptContainer", style: "display: none;"});
 		private readonly _advancedSongSettings: HTMLDivElement = div({ class: "editor-song-settings", style: "margin: 0px 5px;" }, 
 			div({ style: "margin: 3px 0; text-align: center;" }, div({},"Advanced Song Settings")),
-			div({ class: "selectRow" }, span({}, div({},"Mix: ")), div({ class: "selectContainer" }, this._mixSelectRow)),
+			div({ class: "selectRow" }, span({}, div({style:"display: flex;"},"Mix: ", this._mixHint)), div({ class: "selectContainer" }, this._mixSelectRow)),
 			div({ class: "selectRow" }, span({}, div({},"Sample Rate: ")), div({ class: "selectContainer" }, this._sampleRateSelect)),
 			div({ class: "selectRow" }, span({}, div({},"Blending: ")), this._blendSlider.input),
 			div({ class: "selectRow" }, span({}, div({},"Riff: ")), this._riffSlider.input),
@@ -637,7 +642,10 @@ const {button, div, span, select, option, input, a} = HTML;
 			const wasActive: boolean = this.mainLayer.contains(document.activeElement);
 			let activeElement: Element = document.activeElement ? document.activeElement : document.activeElement!;
 
-			
+            if (this._doc.channel >= this._doc.song.pitchChannelCount + this._doc.song.drumChannelCount) {
+                this._piano.forceRender();
+            }
+
 			setSelectedIndex(this._scaleSelect, this._doc.song.scale);
 			setSelectedIndex(this._mixSelect, this._doc.song.mix);
 			setSelectedIndex(this._sampleRateSelect, this._doc.song.sampleRate);
@@ -746,8 +754,6 @@ const {button, div, span, select, option, input, a} = HTML;
 				}
 				buildOptions(this._instrumentSelect, instrumentList);
 			}*/
-
-			console.log(this._doc.song.instrumentsPerChannel);
 
 			if (this._instrumentInput.max != String(this._doc.song.instrumentsPerChannel)) {
 				this._instrumentInput.max = String(this._doc.song.instrumentsPerChannel);

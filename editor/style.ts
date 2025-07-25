@@ -210,6 +210,7 @@ background: ${ColorConfig.pageMargin};
 /* Use psuedo-elements to add cross-browser up & down arrows to select elements: */
 .beepboxEditor .selectContainer {
 	position: relative;
+	width: 100%;
 }
 .beepboxEditor .selectContainer:not(.menu)::before {
 	content: "";
@@ -256,6 +257,8 @@ background: ${ColorConfig.pageMargin};
 	font-size: inherit;
 	cursor: pointer;
 	font-family: inherit;
+
+	width:100%;
 
 	-webkit-appearance:none;
 	-moz-appearance: none;
@@ -411,9 +414,8 @@ background: ${ColorConfig.pageMargin};
 
 .beepboxEditor .selectRow {
 	margin: 0;
-	height: 2.5em;
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	align-items: center;
 	justify-content: space-between;
 }
@@ -676,11 +678,8 @@ background: ${ColorConfig.pageMargin};
 	.beepboxEditor .editor-right-widgets {
 		flex-grow: 1;
 	}
-	.beepboxEditor .editor-settings input, .beepboxEditor .editor-settings select {
-		width: 8.6em;
-	}
 	.beepboxEditor .editor-right-settings input, .beepboxEditor .editor-right-settings select {
-		width: 8.6em;
+		width: 100%;
 	}
 	.beepboxEditor .editor-menus > * {
 		flex-grow: 1;
@@ -784,10 +783,10 @@ background: ${ColorConfig.pageMargin};
 		margin: 0 .2em;
 	}
 	.beepboxEditor .editor-settings input, .beepboxEditor .editor-settings .selectContainer {
-		width: 60%;
+		width: 100%;
 	}
 	.beepboxEditor .editor-right-settings input, .beepboxEditor .editor-right-settings .selectContainer {
-		width: 60%;
+		width: 100%;
 	}
 	.beepboxEditor .editor-settings select {
 		width: 100%;
