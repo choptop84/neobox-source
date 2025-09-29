@@ -52,6 +52,8 @@ import { Preferences } from "./Preferences";
 		public prompt: string | null = null;
 		public readonly prefs: Preferences = new Preferences();
 		
+		//private static readonly _maximumUndoHistory: number = 300;
+
 		private _recentChange: Change | null = null;
 		private _sequenceNumber: number = 0;
 		private _barFromCurrentState: number = 0;
@@ -64,7 +66,15 @@ import { Preferences } from "./Preferences";
 			this.synth = new Synth(this.song);
 
 			this.synth.volume = this._calcVolume();
-			
+	
+			this.song.initToDefault(true);
+
+		if (window.sessionStorage.getItem("currentUndoIndex") == null) {
+			window.sessionStorage.setItem("currentUndoIndex", "0");
+			window.sessionStorage.setItem("oldestUndoIndex", "0");
+			window.sessionStorage.setItem("newestUndoIndex", "0");
+		}
+
 			if (this.song.setSongTheme == "none") {
 				if (window.localStorage.getItem("modboxTheme") != null) {
 					ColorConfig.setTheme(String(window.localStorage.getItem("modboxTheme")));
@@ -87,7 +97,7 @@ import { Preferences } from "./Preferences";
 			if (state == null) {
 				// When the page is first loaded, indicate that undo is NOT possible.
 				state = {canUndo: false, sequenceNumber: 0, bar: 0, channel: 0, prompt: null};
-				window.history.replaceState(state, "", "#" + this.song.toBase64String());
+				//window.history.replaceState(state, "", "#" + this.song.toBase64String());
 			}
 			window.addEventListener("hashchange", this._whenHistoryStateChanged);
 			window.addEventListener("popstate", this._whenHistoryStateChanged);
@@ -98,7 +108,7 @@ import { Preferences } from "./Preferences";
 			this._channelFromCurrentState = state.channel;
 			this.barScrollPos = Math.max(0, this.bar - (this.trackVisibleBars - 6));
 			this.prompt = state.prompt;
-			
+
 			// For all input events, catch them when they are about to finish bubbling,
 			// presumably after all handlers are done updating the model and update the
 			// view before the screen renders. mouseenter and mouseleave do not bubble,
@@ -120,7 +130,7 @@ import { Preferences } from "./Preferences";
 				this._sequenceNumber++;
 				state = {canUndo: true, sequenceNumber: this._sequenceNumber, bar: this.bar, channel: this.channel, prompt: this.prompt};
 				new ChangeSong(this, location.hash);
-				window.history.replaceState(state, "", "#" + this.song.toBase64String());
+				//window.history.replaceState(state, "", "#" + this.song.toBase64String());
 			} else {
 				if (state.sequenceNumber == this._sequenceNumber - 1) {
 					// undo:
@@ -151,15 +161,15 @@ import { Preferences } from "./Preferences";
 		
 		private _updateHistoryState = (): void => {
 			this._waitingToUpdateState = false;
-			const hash: string = "#" + this.song.toBase64String();
+			//const hash: string = "#" + this.song.toBase64String();
 			let state: HistoryState;
 			if (this._shouldPushState) {
 				this._sequenceNumber++;
 				state = {canUndo: true, sequenceNumber: this._sequenceNumber, bar: this.bar, channel: this.channel, prompt: this.prompt};
-				window.history.pushState(state, "", hash);
+				//window.history.pushState(state, "", hash);
 			} else {
 				state = {canUndo: true, sequenceNumber: this._sequenceNumber, bar: this.bar, channel: this.channel, prompt: this.prompt};
-				window.history.replaceState(state, "", hash);
+				//window.history.replaceState(state, "", hash);
 			}
 			this._barFromCurrentState = state.bar;
 			this._channelFromCurrentState = state.channel;
@@ -186,10 +196,10 @@ import { Preferences } from "./Preferences";
 		
 		public openPrompt(prompt: string): void {
 			this.prompt = prompt;
-			const hash: string = "#" + this.song.toBase64String();
+			//const hash: string = "#" + this.song.toBase64String();
 			this._sequenceNumber++;
-			const state = {canUndo: true, sequenceNumber: this._sequenceNumber, bar: this.bar, channel: this.channel, prompt: this.prompt};
-			window.history.pushState(state, "", hash);
+			//const state = {canUndo: true, sequenceNumber: this._sequenceNumber, bar: this.bar, channel: this.channel, prompt: this.prompt};
+			//window.history.pushState(state, "", hash);
 		}
 		
 		public undo(): void {

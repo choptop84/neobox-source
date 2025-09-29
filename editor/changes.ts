@@ -984,7 +984,7 @@ import { InstrumentType, Config } from "../synth/SynthConfig";
 	export class ChangeSong extends Change {
 		constructor(doc: SongDocument, newHash: string) {
 			super();
-			doc.song.fromBase64String(newHash);
+			//doc.song.fromBase64String(newHash);
 			doc.channel = Math.min(doc.channel, doc.song.getChannelCount() - 1);
 			doc.bar = Math.max(0, Math.min(doc.song.barCount - 1, doc.bar));
 			doc.barScrollPos = Math.max(0, Math.min(doc.song.barCount - doc.trackVisibleBars, doc.barScrollPos));

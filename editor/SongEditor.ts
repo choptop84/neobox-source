@@ -152,7 +152,6 @@ const {button, div, span, select, option, input, a} = HTML;
 			option({value: "cleanS"}, "New Song"),
 			option({value: "import"}, "Import JSON..."),
 			option({value: "export"}, "Export Song..."),
-			option({value: "shortenUrl"}, "Shorten Song Url..."),
 			option({value: "songdata"}, "Song Data..."),
 			option({value: "manual"}, "Open Manual..."),
 		);
@@ -1329,9 +1328,6 @@ const {button, div, span, select, option, input, a} = HTML;
 				case "manual":
 					window.open("./manual.html");
 					break;
-				case "shortenUrl":
-					window.open("https://tinyurl.com/api-create.php?url=" + encodeURIComponent(new URL("#" + this._doc.song.toBase64String(), location.href).href));
-				break;
 			}
 			this._fileMenu.selectedIndex = 0;
 		}
